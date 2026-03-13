@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="식물관리">
+<meta name="theme-color" content="#4a7c59">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>🌿 식물 물주기 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2ed;
+    --bg2: #ede9e2;
+    --card: #ffffff;
+    --card2: #faf8f5;
+    --text: #2d2a25;
+    --text2: #6b6560;
+    --text3: #9e9990;
+    --border: #e0dbd3;
+    --green: #4a7c59;
+    --green-light: #e8f2ec;
+    --urgent: #E24B4A;
+    --urgent-bg: #fdeaea;
+    --today: #EF9F27;
+    --today-bg: #fef4e3;
+    --snooze: #7F77DD;
+    --snooze-bg: #f0effe;
+    --ok: #9e9990;
+    --ok-bg: #f2f0ec;
+    --upcoming: #4a7c59;
+    --upcoming-bg: #e8f2ec;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1916;
+      --bg2: #222019;
+      --card: #2a2822;
+      --card2: #252320;
+      --text: #ede9e2;
+      --text2: #a09990;
+      --text3: #6b6560;
+      --border: #3a3830;
+      --green-light: #1e2e23;
+      --urgent-bg: #2e1a1a;
+      --today-bg: #2e2215;
+      --snooze-bg: #201e35;
+      --ok-bg: #252320;
+      --upcoming-bg: #1e2e23;
+      --shadow: 0 2px 12px rgba(0,0,0,0.3);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    position: relative;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--card);
+    padding: 20px 20px 0;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .app-title {
+    font-family: 'Gowun Dodum', serif;
+    font-size: 22px;
+    color: var(--green);
+    letter-spacing: -0.5px;
+  }
+  .date-info { text-align: right; }
+  .date-main {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .date-day {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 1px;
+  }
+  .weather-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .weather-emoji { font-size: 18px; }
+  .weather-data { display: flex; gap: 12px; }
+  .weather-loading { color: var(--text3); font-style: italic; font-size: 12px; }
+
+  /* SUMMARY CARDS */
+  .summary-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .summary-card {
+    background: var(--card2);
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    text-align: center;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .summary-card:active { transform: scale(0.97); }
+  .summary-card.active-filter { border-color: currentColor; }
+  .summary-num {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .summary-label { font-size: 10px; color: var(--text2); margin-top: 3px; }
+  .summary-card.urgent .summary-num { color: var(--urgent); }
+  .summary-card.today .summary-num { color: var(--today); }
+  .summary-card.total .summary-num { color: var(--green); }
+
+  /* TABS */
+  .tabs-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 14px;
+    scrollbar-width: none;
+  }
+  .tabs-row::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 5px 11px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+  .filter-divider {
+    width: 1px;
+    background: var(--border);
+    flex-shrink: 0;
+    margin: 4px 2px;
+  }
+
+  /* PLANT LIST */
+  .plant-list { padding: 16px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 12px;
+    padding: 10px 14px;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--green);
+  }
+  .section-icon { font-size: 18px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .section-desc { font-size: 11px; color: var(--text2); }
+
+  /* PLANT CARD */
+  .plant-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    border-left: 4px solid var(--border);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    overflow: hidden;
+    position: relative;
+  }
+  .plant-card:active { transform: scale(0.99); box-shadow: none; }
+  .plant-card.urgent { border-left-color: var(--urgent); }
+  .plant-card.today { border-left-color: var(--today); }
+  .plant-card.snooze { border-left-color: var(--snooze); opacity: 0.82; }
+  .plant-card.ok { border-left-color: var(--border); }
+  .plant-card.upcoming { border-left-color: var(--upcoming); }
+
+  .card-inner { padding: 13px 14px 0; }
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .card-left { display: flex; gap: 10px; align-items: flex-start; flex: 1; min-width: 0; }
+  .plant-icon { font-size: 28px; line-height: 1; flex-shrink: 0; }
+  .plant-info { flex: 1; min-width: 0; }
+  .plant-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .plant-type { font-size: 11px; color: var(--text2); margin-top: 1px; }
+  .plant-interval { font-size: 11px; color: var(--text3); }
+  .plant-memo {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+
+  .status-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .badge-urgent { background: var(--urgent-bg); color: var(--urgent); }
+  .badge-today { background: var(--today-bg); color: var(--today); }
+  .badge-snooze { background: var(--snooze-bg); color: var(--snooze); }
+  .badge-ok { background: var(--ok-bg); color: var(--ok); }
+  .badge-upcoming { background: var(--upcoming-bg); color: var(--upcoming); }
+
+  .quick-water-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: var(--green-light);
+    color: var(--green);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s, background 0.1s;
+    flex-shrink: 0;
+  }
+  .quick-water-btn:active { transform: scale(0.9); background: var(--green); color: #fff; }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    margin: 8px 0 0;
+    padding-bottom: 13px;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 4px;
+  }
+  .progress-bar {
+    height: 5px;
+    background: var(--bg2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+  .fill-ok { background: var(--green); }
+  .fill-upcoming { background: var(--today); }
+  .fill-urgent { background: var(--urgent); }
+  .fill-snooze { background: var(--snooze); }
+
+  /* ADD BUTTON */
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    right: calc(50% - 240px + 20px);
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    font-size: 26px;
+    border: none;
+    box-shadow: 0 4px 16px rgba(74,124,89,0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .fab:active { transform: scale(0.93); }
+  @media (max-width: 480px) { .fab { right: 20px; } }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 300;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-box {
+    background: var(--card);
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+    transform: translateY(40px);
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    scrollbar-width: none;
+  }
+  .modal-box::-webkit-scrollbar { display: none; }
+  .modal-overlay.open .modal-box { transform: translateY(0); }
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 18px;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .modal-plant-icon { font-size: 36px; }
+  .modal-title { font-size: 18px; font-weight: 700; color: var(--text); }
+  .modal-subtitle { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .detail-item {
+    background: var(--bg2);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+  .detail-label { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+  .detail-value { font-size: 14px; font-weight: 500; color: var(--text); }
+
+  .memo-box {
+    background: var(--bg2);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+  .memo-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+
+  .history-section { margin-bottom: 16px; }
+  .history-title { font-size: 12px; color: var(--text2); font-weight: 600; margin-bottom: 8px; }
+  .history-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .history-chip {
+    background: var(--green-light);
+    color: var(--green);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .modal-actions-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn {
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-water { background: #2196F3; color: #fff; grid-column: 1/-1; font-size: 14px; padding: 13px; }
+  .btn-snooze { background: var(--snooze-bg); color: var(--snooze); }
+  .btn-edit { background: var(--bg2); color: var(--text); }
+  .btn-delete { background: #fdeaea; color: var(--urgent); }
+  .btn-cancel { background: var(--bg2); color: var(--text); }
+  .btn-save { background: var(--green); color: #fff; }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-full { grid-column: 1/-1; }
+
+  /* SNOOZE PICKER */
+  .snooze-picker {
+    background: var(--bg2);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .snooze-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+  .snooze-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .snooze-opt {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text);
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .snooze-opt.selected { background: var(--snooze); border-color: var(--snooze); color: #fff; }
+  .snooze-custom-row { display: flex; gap: 8px; align-items: center; }
+  .snooze-input {
+    width: 70px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    text-align: center;
+  }
+  .snooze-input:focus { outline: none; border-color: var(--snooze); }
+  .snooze-unit { font-size: 12px; color: var(--text2); }
+
+  /* FORM */
+  .form-section { margin-bottom: 16px; }
+  .form-label { font-size: 12px; color: var(--text2); font-weight: 500; margin-bottom: 6px; display: block; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--green);
+  }
+  .form-textarea { resize: none; height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .icon-opt {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    cursor: pointer;
+    background: var(--bg2);
+    transition: border-color 0.1s, transform 0.1s;
+  }
+  .icon-opt.selected { border-color: var(--green); background: var(--green-light); transform: scale(1.05); }
+  .next-water-preview {
+    font-size: 12px;
+    color: var(--text2);
+    background: var(--green-light);
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+  .next-water-preview span { color: var(--green); font-weight: 600; }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #2d2a25;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    z-index: 500;
+    opacity: 0;
+    transition: all 0.3s;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  select option { background: var(--card); }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="app-title">🌿 식물 물주기</div>
+      </div>
+      <div class="date-info">
+        <div class="date-main" id="dateMain"></div>
+        <div class="date-day" id="dateDay"></div>
+      </div>
+    </div>
+    <div class="weather-bar">
+      <span class="weather-emoji" id="weatherEmoji">🌤</span>
+      <span id="weatherData" class="weather-loading">날씨 불러오는 중…</span>
+    </div>
+    <div class="summary-row">
+      <div class="summary-card urgent" id="cardUrgent" onclick="filterStatus('urgent')">
+        <div class="summary-num" id="numUrgent">0</div>
+        <div class="summary-label">물주기 지남</div>
+      </div>
+      <div class="summary-card today" id="cardToday" onclick="filterStatus('today')">
+        <div class="summary-num" id="numToday">0</div>
+        <div class="summary-label">오늘 예정</div>
+      </div>
+      <div class="summary-card total" id="cardTotal" onclick="filterStatus('all')">
+        <div class="summary-num" id="numTotal">0</div>
+        <div class="summary-label">등록 식물</div>
+      </div>
+    </div>
+    <div class="tabs-row" id="tabsRow">
+      <button class="tab-btn active" onclick="setLocFilter('all',this)">전체</button>
+      <button class="tab-btn" onclick="setLocFilter('se',this)">🌤 남동향 베란다</button>
+      <button class="tab-btn" onclick="setLocFilter('e',this)">🌿 동향 거실창가</button>
+      <div class="filter-divider"></div>
+      <button class="tab-btn" id="tabStat-all" onclick="setStatFilter('all',this)">전체</button>
+      <button class="tab-btn" id="tabStat-urgent" onclick="setStatFilter('urgent',this)">🚨 긴급</button>
+      <button class="tab-btn" id="tabStat-today" onclick="setStatFilter('today',this)">오늘</button>
+      <button class="tab-btn" id="tabStat-upcoming" onclick="setStatFilter('upcoming',this)">예정</button>
+      <button class="tab-btn" id="tabStat-ok" onclick="setStatFilter('ok',this)">양호</button>
+    </div>
+  </div>
+
+  <div class="plant-list" id="plantList"></div>
+  <div style="height:80px"></div>
+</div>
+
+<button class="fab" onclick="openAddModal()">+</button>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal" onclick="handleOverlayClick(event,'detailModal')">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-plant-icon" id="dm-icon"></div>
+      <div>
+        <div class="modal-title" id="dm-name"></div>
+        <div class="modal-subtitle" id="dm-sub"></div>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-item">
+        <div class="detail-label">물주기 간격</div>
+        <div class="detail-value" id="dm-interval"></div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">상태</div>
+        <div class="detail-value" id="dm-status"></div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">마지막 물주기</div>
+        <div class="detail-value" id="dm-last"></div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">다음 물주기</div>
+        <div class="detail-value" id="dm-next"></div>
+      </div>
+    </div>
+    <div class="memo-box" id="dm-memo-wrap">
+      <div class="memo-label">💡 메모</div>
+      <div id="dm-memo"></div>
+    </div>
+    <div class="history-section">
+      <div class="history-title">최근 물주기 기록</div>
+      <div class="history-list" id="dm-history"></div>
+    </div>
+    <div id="snoozePicker" class="snooze-picker" style="display:none">
+      <div class="snooze-title">⏰ 미루기 — 며칠 뒤에 알릴까요?</div>
+      <div class="snooze-options">
+        <button class="snooze-opt" onclick="selectSnoozeOpt(1,this)">1일</button>
+        <button class="snooze-opt selected" onclick="selectSnoozeOpt(2,this)">2일</button>
+        <button class="snooze-opt" onclick="selectSnoozeOpt(3,this)">3일</button>
+        <button class="snooze-opt" onclick="selectSnoozeOpt(5,this)">5일</button>
+      </div>
+      <div class="snooze-custom-row">
+        <input class="snooze-input" type="number" id="snoozeCustom" value="2" min="1" max="30" oninput="syncSnoozeCustom(this)">
+        <span class="snooze-unit">일 후</span>
+        <button class="btn btn-primary" style="padding:7px 14px;font-size:12px;" onclick="confirmSnooze()">확인</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-water btn-full" onclick="waterPlant()">💧 지금 물주기</button>
+    </div>
+    <div class="modal-actions-2">
+      <button class="btn btn-snooze" onclick="toggleSnoozePicker()">💤 미루기</button>
+      <button class="btn btn-edit" onclick="openEditFromDetail()">✏️ 수정</button>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn btn-delete btn-full" onclick="deletePlant()">🗑️ 삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal" onclick="handleOverlayClick(event,'editModal')">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:16px;color:var(--text)">✏️ 식물 수정</div>
+    <div id="editForm"></div>
+    <div class="modal-actions-2" style="margin-top:12px">
+      <button class="btn btn-cancel" onclick="closeModal('editModal')">취소</button>
+      <button class="btn btn-save" onclick="saveEdit()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal" onclick="handleOverlayClick(event,'addModal')">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:16px;color:var(--text)">🌱 식물 추가</div>
+    <div id="addForm"></div>
+    <div class="modal-actions-2" style="margin-top:12px">
+      <button class="btn btn-cancel" onclick="closeModal('addModal')">취소</button>
+      <button class="btn btn-save" onclick="saveAdd()">추가</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'plant_tracker_v1';
+const DAYS_KO = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+const ICONS = ['🌵','🌸','🌱','🌿','🪴','🍃','🌺','🌳','🌾','🍀','🪷','🌻','🍁','🎋','🪸'];
+const LOC_INFO = {
+  se: { label: '🌤 남동향 베란다', desc: '직사광선 3-4h + 밝은 간접광 / 21-26°C / 통풍 양호' },
+  e:  { label: '🌿 동향 거실창가', desc: '밝은 간접광 / 22-25°C / 통풍 양호' }
+};
+const DEFAULT_PLANTS = [
+  {id:1,icon:'🌵',name:'청산호',type:'다육식물',interval:28,lastWater:'2026-03-04',location:'se',memo:'흙 완전히 말랐을 때만',history:[]},
+  {id:2,icon:'🌸',name:'벤쿠버제라늄',type:'화초',interval:7,lastWater:'2026-03-11',location:'se',memo:'겉흙 1-2cm 말랐을 때',history:[]},
+  {id:3,icon:'🌱',name:'바질',type:'허브',interval:5,lastWater:'2026-03-11',location:'se',memo:'겉면 마르면 바로 주기',history:[]},
+  {id:4,icon:'🌿',name:'콩란',type:'관엽식물',interval:14,lastWater:'2026-03-11',location:'se',memo:'건조에 꽤 강함',history:[]},
+  {id:5,icon:'🪴',name:'필로덴드론 플로리다뷰티',type:'관엽식물',interval:10,lastWater:'2026-03-04',location:'se',memo:'뿌리 과습 민감',history:[]},
+  {id:6,icon:'🍃',name:'머랭고 아이비',type:'관엽식물',interval:8,lastWater:'2026-03-07',location:'se',memo:'겉흙 충분히 마른 후',history:[]},
+  {id:7,icon:'🌿',name:'필레아 페페',type:'관엽식물',interval:8,lastWater:'2026-03-07',location:'se',memo:'수분 좋아하나 과습 주의',history:[]},
+  {id:8,icon:'🌺',name:'칼랑코에',type:'화초',interval:14,lastWater:'2026-02-25',location:'se',memo:'3월 성장기엔 다소 촉촉하게',history:[]},
+  {id:9,icon:'🌸',name:'베고니아 마큘라타',type:'화초',interval:8,lastWater:'2026-03-11',location:'se',memo:'겉흙 살짝 마르면',history:[]},
+  {id:10,icon:'🌳',name:'아라우카리아',type:'관엽식물',interval:8,lastWater:'2026-03-04',location:'se',memo:'3월엔 아직 왕성하지 않음',history:[]},
+  {id:11,icon:'🪷',name:'디시디아 화이트',type:'다육식물',interval:12,lastWater:'2026-03-07',location:'se',memo:'뿌리 과습 매우 취약',history:[]},
+  {id:12,icon:'🌵',name:'립살리스 화이트',type:'다육식물',interval:12,lastWater:'2026-03-03',location:'se',memo:'완전건조 NO, 다소 촉촉하게',history:[]},
+  {id:18,icon:'🌱',name:'브레이니아',type:'관엽식물',interval:7,lastWater:'2026-03-04',location:'se',memo:'',history:[]},
+  {id:19,icon:'🍃',name:'러브체인금',type:'다육식물',interval:10,lastWater:'2026-03-08',location:'se',memo:'',history:[]},
+  {id:13,icon:'🌾',name:'아스파라거스 나누스',type:'관엽식물',interval:8,lastWater:'2026-03-07',location:'e',memo:'건조에 약함, 겉흙 마르면 바로',history:[]},
+  {id:14,icon:'🍀',name:'수성아이비',type:'관엽식물',interval:8,lastWater:'2026-03-07',location:'e',memo:'겉흙 1-2cm 말랐을 때',history:[]},
+  {id:15,icon:'🌿',name:'다바나 고사리',type:'양치식물',interval:8,lastWater:'2026-03-07',location:'e',memo:'겉흙 마르기 시작하면',history:[]},
+  {id:16,icon:'🌸',name:'나비란',type:'화초',interval:10,lastWater:'2026-03-11',location:'e',memo:'뿌리 통기 중요, 충분히 마른 후',history:[]},
+  {id:17,icon:'🪴',name:'홍콩야자',type:'관엽식물',interval:12,lastWater:'2026-03-04',location:'e',memo:'과습·건조 모두 싫어함',history:[]},
+];
+
+let plants = [];
+let locFilter = 'all';
+let statFilter = 'all';
+let activeDetailId = null;
+let snoozeSelectedDays = 2;
+
+function today() {
+  return new Date().toISOString().slice(0,10);
+}
+function parseDate(s) {
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y,m-1,d);
+}
+function addDays(dateStr, days) {
+  const d = parseDate(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0,10);
+}
+function diffDays(a, b) {
+  return Math.round((parseDate(a) - parseDate(b)) / 86400000);
+}
+function formatDate(s) {
+  if (!s) return '-';
+  const d = parseDate(s);
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function getStatus(plant) {
+  const todayStr = today();
+  if (plant.snoozeUntil && plant.snoozeUntil > todayStr) return 'snooze';
+  const next = addDays(plant.lastWater, plant.interval);
+  const diff = diffDays(next, todayStr);
+  if (diff < 0) return 'urgent';
+  if (diff === 0) return 'today';
+  if (diff <= 3) return 'upcoming';
+  return 'ok';
+}
+function getStatusLabel(status, plant) {
+  if (status === 'snooze') {
+    const remaining = diffDays(plant.snoozeUntil, today());
+    return `💤 D+${remaining}`;
+  }
+  const next = addDays(plant.lastWater, plant.interval);
+  const diff = diffDays(next, today());
+  if (status === 'urgent') return `🚨 D${diff}`;
+  if (status === 'today') return '💧 오늘';
+  if (status === 'upcoming') return `🌱 D-${diff}`;
+  const d = addDays(plant.lastWater, plant.interval);
+  const rem = diffDays(d, today());
+  return `✅ D-${rem}`;
+}
+function getStatusOrder(s) {
+  return {urgent:0, today:1, snooze:2, upcoming:3, ok:4}[s] ?? 5;
+}
+function getSortKey(plant) {
+  const s = getStatus(plant);
+  const next = addDays(plant.lastWater, plant.interval);
+  const diff = diffDays(next, today());
+  return [getStatusOrder(s), diff];
+}
+
+async function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { plants = JSON.parse(raw); return; }
+  } catch(e) {}
+  plants = JSON.parse(JSON.stringify(DEFAULT_PLANTS));
+  await saveData();
+}
+async function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(plants)); } catch(e) {}
+}
+
+function updateHeader() {
+  const d = new Date();
+  document.getElementById('dateMain').textContent =
+    `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  document.getElementById('dateDay').textContent = DAYS_KO[d.getDay()];
+}
+
+async function fetchWeather() {
+  try {
+    const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780&current=temperature_2m,relative_humidity_2m,weather_code&timezone=Asia%2FSeoul');
+    const data = await r.json();
+    const c = data.current;
+    const temp = Math.round(c.temperature_2m);
+    const hum = c.relative_humidity_2m;
+    const code = c.weather_code;
+    const emoji = weatherCodeToEmoji(code);
+    document.getElementById('weatherEmoji').textContent = emoji;
+    document.getElementById('weatherData').textContent = `${temp}°C  💧 ${hum}%  서울 현재 날씨`;
+    document.getElementById('weatherData').classList.remove('weather-loading');
+  } catch(e) {
+    document.getElementById('weatherData').textContent = '날씨 정보를 불러올 수 없습니다';
+  }
+}
+function weatherCodeToEmoji(code) {
+  if (code === 0) return '☀️';
+  if (code <= 2) return '🌤';
+  if (code <= 3) return '☁️';
+  if (code <= 48) return '🌫';
+  if (code <= 67) return '🌧';
+  if (code <= 77) return '❄️';
+  if (code <= 82) return '🌦';
+  if (code <= 99) return '⛈';
+  return '🌤';
+}
+
+function updateSummary() {
+  const todayStr = today();
+  let urgent = 0, todayC = 0;
+  plants.forEach(p => {
+    const s = getStatus(p);
+    if (s === 'urgent') urgent++;
+    if (s === 'today') todayC++;
+  });
+  document.getElementById('numUrgent').textContent = urgent;
+  document.getElementById('numToday').textContent = todayC;
+  document.getElementById('numTotal').textContent = plants.length;
+}
+
+function renderPlants() {
+  updateSummary();
+  const list = document.getElementById('plantList');
+  list.innerHTML = '';
+  let filtered = plants.filter(p => {
+    if (locFilter !== 'all' && p.location !== locFilter) return false;
+    const s = getStatus(p);
+    if (statFilter === 'urgent' && s !== 'urgent') return false;
+    if (statFilter === 'today' && s !== 'today') return false;
+    if (statFilter === 'upcoming' && s !== 'upcoming' && s !== 'snooze') return false;
+    if (statFilter === 'ok' && s !== 'ok') return false;
+    return true;
+  });
+  filtered.sort((a, b) => {
+    const [oa, da] = getSortKey(a);
+    const [ob, db] = getSortKey(b);
+    if (oa !== ob) return oa - ob;
+    return da - db;
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🌵</div><div class="empty-text">해당하는 식물이 없어요</div></div>';
+    return;
+  }
+
+  const locs = locFilter === 'all' ? ['se','e'] : [locFilter];
+  locs.forEach(loc => {
+    const group = filtered.filter(p => p.location === loc);
+    if (!group.length) return;
+    const info = LOC_INFO[loc];
+    const hdr = document.createElement('div');
+    hdr.className = 'section-header';
+    hdr.innerHTML = `<div><div class="section-title">${info.label}</div><div class="section-desc">${info.desc}</div></div>`;
+    list.appendChild(hdr);
+    group.forEach(p => list.appendChild(buildCard(p)));
+  });
+}
+
+function buildCard(plant) {
+  const status = getStatus(plant);
+  const next = addDays(plant.lastWater, plant.interval);
+  const elapsed = diffDays(today(), plant.lastWater);
+  const progress = Math.min(Math.round((elapsed / plant.interval) * 100), 100);
+  const diff = diffDays(next, today());
+  const label = getStatusLabel(status, plant);
+
+  const fillClass = status === 'urgent' ? 'fill-urgent'
+    : status === 'today' ? 'fill-upcoming'
+    : status === 'snooze' ? 'fill-snooze'
+    : progress > 70 ? 'fill-upcoming' : 'fill-ok';
+
+  const badgeClass = {urgent:'badge-urgent', today:'badge-today', snooze:'badge-snooze', ok:'badge-ok', upcoming:'badge-upcoming'}[status];
+
+  const card = document.createElement('div');
+  card.className = `plant-card ${status}`;
+  card.onclick = (e) => { if (!e.target.classList.contains('quick-water-btn')) openDetail(plant.id); };
+
+  const memoHtml = plant.memo ? `<div class="plant-memo">💡 ${plant.memo}</div>` : '';
+  const nextStr = status === 'snooze'
+    ? `미루기 중 (${formatDate(plant.snoozeUntil)}까지)`
+    : diff === 0 ? '오늘' : diff < 0 ? `${-diff}일 지남` : `${diff}일 후`;
+
+  card.innerHTML = `
+    <div class="card-inner">
+      <div class="card-top">
+        <div class="card-left">
+          <div class="plant-icon">${plant.icon}</div>
+          <div class="plant-info">
+            <div class="plant-name">${plant.name}</div>
+            <div class="plant-type">${plant.type} · ${plant.interval}일 간격</div>
+            <div class="plant-interval">다음: ${nextStr}</div>
+            ${memoHtml}
+          </div>
+        </div>
+        <div class="card-right">
+          <span class="status-badge ${badgeClass}">${label}</span>
+          <button class="quick-water-btn" onclick="quickWater(${plant.id},event)" title="빠른 물주기">💧</button>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span>마지막: ${formatDate(plant.lastWater)}</span>
+          <span>${progress}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${progress}%"></div></div>
+      </div>
+    </div>`;
+  return card;
+}
+
+function openDetail(id) {
+  const p = plants.find(x => x.id === id);
+  if (!p) return;
+  activeDetailId = id;
+  const status = getStatus(p);
+  const next = addDays(p.lastWater, p.interval);
+  const diff = diffDays(next, today());
+
+  document.getElementById('dm-icon').textContent = p.icon;
+  document.getElementById('dm-name').textContent = p.name;
+  document.getElementById('dm-sub').textContent = `${p.type} · ${LOC_INFO[p.location].label}`;
+  document.getElementById('dm-interval').textContent = `${p.interval}일마다`;
+  document.getElementById('dm-last').textContent = p.lastWater;
+  document.getElementById('dm-next').textContent = next;
+  const statusTexts = {urgent:`🚨 ${-diff}일 지남`, today:'💧 오늘', snooze:`💤 미루기 중`, upcoming:`🌱 ${diff}일 후`, ok:`✅ ${diff}일 후`};
+  document.getElementById('dm-status').textContent = statusTexts[status];
+
+  const memoWrap = document.getElementById('dm-memo-wrap');
+  if (p.memo) { memoWrap.style.display=''; document.getElementById('dm-memo').textContent = p.memo; }
+  else memoWrap.style.display = 'none';
+
+  const hist = document.getElementById('dm-history');
+  const entries = (p.history || []).slice(-6).reverse();
+  hist.innerHTML = entries.length
+    ? entries.map(d => `<span class="history-chip">💧 ${d}</span>`).join('')
+    : '<span style="font-size:12px;color:var(--text3)">기록 없음</span>';
+
+  document.getElementById('snoozePicker').style.display = 'none';
+  snoozeSelectedDays = 2;
+  document.querySelectorAll('.snooze-opt').forEach(b => b.classList.toggle('selected', parseInt(b.textContent) === 2));
+  document.getElementById('snoozeCustom').value = 2;
+
+  openModal('detailModal');
+}
+
+async function waterPlant() {
+  const p = plants.find(x => x.id === activeDetailId);
+  if (!p) return;
+  const todayStr = today();
+  p.history = p.history || [];
+  if (!p.history.includes(todayStr)) p.history.push(todayStr);
+  if (p.history.length > 20) p.history = p.history.slice(-20);
+  p.lastWater = todayStr;
+  delete p.snoozeUntil;
+  await saveData();
+  closeModal('detailModal');
+  renderPlants();
+  showToast(`💧 ${p.name} 물주기 완료!`);
+}
+
+async function quickWater(id, e) {
+  e.stopPropagation();
+  const p = plants.find(x => x.id === id);
+  if (!p) return;
+  const todayStr = today();
+  p.history = p.history || [];
+  if (!p.history.includes(todayStr)) p.history.push(todayStr);
+  if (p.history.length > 20) p.history = p.history.slice(-20);
+  p.lastWater = todayStr;
+  delete p.snoozeUntil;
+  await saveData();
+  renderPlants();
+  showToast(`💧 ${p.name} 물주기 완료!`);
+}
+
+function toggleSnoozePicker() {
+  const el = document.getElementById('snoozePicker');
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+function selectSnoozeOpt(days, btn) {
+  snoozeSelectedDays = days;
+  document.querySelectorAll('.snooze-opt').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('snoozeCustom').value = days;
+}
+function syncSnoozeCustom(input) {
+  snoozeSelectedDays = parseInt(input.value) || 1;
+  document.querySelectorAll('.snooze-opt').forEach(b => b.classList.remove('selected'));
+}
+async function confirmSnooze() {
+  const days = parseInt(document.getElementById('snoozeCustom').value) || snoozeSelectedDays;
+  const p = plants.find(x => x.id === activeDetailId);
+  if (!p) return;
+  p.snoozeUntil = addDays(today(), days);
+  await saveData();
+  closeModal('detailModal');
+  renderPlants();
+  showToast(`💤 ${p.name} ${days}일 후로 미룸`);
+}
+
+async function deletePlant() {
+  if (!confirm('정말 삭제할까요?')) return;
+  plants = plants.filter(x => x.id !== activeDetailId);
+  await saveData();
+  closeModal('detailModal');
+  renderPlants();
+  showToast('🗑️ 삭제되었습니다');
+}
+
+function openEditFromDetail() {
+  const p = plants.find(x => x.id === activeDetailId);
+  if (!p) return;
+  closeModal('detailModal');
+  setTimeout(() => openEditModal(p), 200);
+}
+
+function buildPlantForm(p) {
+  const isEdit = !!p;
+  const d = p || {icon:'🌱',name:'',type:'',interval:7,lastWater:today(),location:'se',memo:''};
+  return `
+    <div class="form-section">
+      <label class="form-label">아이콘</label>
+      <div class="icon-grid" id="iconGrid">
+        ${ICONS.map(ic => `<div class="icon-opt${ic===d.icon?' selected':''}" onclick="selectIcon(this,'${ic}')">${ic}</div>`).join('')}
+      </div>
+      <input type="hidden" id="f-icon" value="${d.icon}">
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">이름 *</label>
+        <input class="form-input" id="f-name" value="${d.name}" placeholder="식물 이름">
+      </div>
+      <div class="form-section">
+        <label class="form-label">종류</label>
+        <input class="form-input" id="f-type" value="${d.type}" placeholder="관엽식물">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-section">
+        <label class="form-label">물주기 간격 (일)</label>
+        <input class="form-input" type="number" id="f-interval" value="${d.interval}" min="1" oninput="updateNextPreview()">
+      </div>
+      <div class="form-section">
+        <label class="form-label">마지막 물주기</label>
+        <input class="form-input" type="date" id="f-lastwater" value="${d.lastWater}" oninput="updateNextPreview()">
+      </div>
+    </div>
+    <div class="form-section">
+      <label class="form-label">장소</label>
+      <select class="form-select" id="f-location">
+        <option value="se"${d.location==='se'?' selected':''}>🌤 남동향 베란다</option>
+        <option value="e"${d.location==='e'?' selected':''}>🌿 동향 거실창가</option>
+      </select>
+    </div>
+    <div class="form-section">
+      <label class="form-label">메모</label>
+      <textarea class="form-textarea" id="f-memo" placeholder="물주기 조건 등">${d.memo||''}</textarea>
+    </div>
+    <div class="next-water-preview" id="nextPreview">다음 물주기 예정: <span id="nextPreviewDate">${addDays(d.lastWater, d.interval)}</span></div>
+  `;
+}
+function selectIcon(el, icon) {
+  document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('f-icon').value = icon;
+}
+function updateNextPreview() {
+  const lw = document.getElementById('f-lastwater')?.value;
+  const iv = parseInt(document.getElementById('f-interval')?.value);
+  if (lw && iv) {
+    document.getElementById('nextPreviewDate').textContent = addDays(lw, iv);
+  }
+}
+
+function openEditModal(p) {
+  document.getElementById('editForm').innerHTML = buildPlantForm(p);
+  openModal('editModal');
+}
+async function saveEdit() {
+  const p = plants.find(x => x.id === activeDetailId);
+  if (!p) return;
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('이름을 입력해주세요'); return; }
+  p.icon = document.getElementById('f-icon').value;
+  p.name = name;
+  p.type = document.getElementById('f-type').value.trim();
+  p.interval = parseInt(document.getElementById('f-interval').value) || 7;
+  p.lastWater = document.getElementById('f-lastwater').value;
+  p.location = document.getElementById('f-location').value;
+  p.memo = document.getElementById('f-memo').value.trim();
+  await saveData();
+  closeModal('editModal');
+  renderPlants();
+  showToast('✅ 수정 완료!');
+}
+
+function openAddModal() {
+  activeDetailId = null;
+  document.getElementById('addForm').innerHTML = buildPlantForm(null);
+  openModal('addModal');
+}
+async function saveAdd() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('이름을 입력해주세요'); return; }
+  const newId = plants.length ? Math.max(...plants.map(p=>p.id)) + 1 : 1;
+  plants.push({
+    id: newId,
+    icon: document.getElementById('f-icon').value || '🌱',
+    name,
+    type: document.getElementById('f-type').value.trim(),
+    interval: parseInt(document.getElementById('f-interval').value) || 7,
+    lastWater: document.getElementById('f-lastwater').value || today(),
+    location: document.getElementById('f-location').value || 'se',
+    memo: document.getElementById('f-memo').value.trim(),
+    history: []
+  });
+  await saveData();
+  closeModal('addModal');
+  renderPlants();
+  showToast('🌱 새 식물 추가!');
+}
+
+function setLocFilter(val, btn) {
+  locFilter = val;
+  document.querySelectorAll('#tabsRow .tab-btn').forEach((b,i) => {
+    if (i <= 2) b.classList.toggle('active', b === btn);
+  });
+  renderPlants();
+}
+function setStatFilter(val, btn) {
+  statFilter = val;
+  ['all','urgent','today','upcoming','ok'].forEach(s => {
+    const el = document.getElementById(`tabStat-${s}`);
+    if (el) el.classList.toggle('active', s === val);
+  });
+  renderPlants();
+}
+function filterStatus(val) {
+  if (val === 'all') setStatFilter('all', document.getElementById('tabStat-all'));
+  else if (val === 'urgent') setStatFilter('urgent', document.getElementById('tabStat-urgent'));
+  else if (val === 'today') setStatFilter('today', document.getElementById('tabStat-today'));
+}
+
+function openModal(id) {
+  const el = document.getElementById(id);
+  el.style.display = 'flex';
+  requestAnimationFrame(() => el.classList.add('open'));
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('open');
+  setTimeout(() => { el.style.display = 'none'; }, 250);
+  document.body.style.overflow = '';
+}
+function handleOverlayClick(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// init
+(async () => {
+  await loadData();
+  updateHeader();
+  fetchWeather();
+  renderPlants();
+  setInterval(updateHeader, 60000);
+  setInterval(fetchWeather, 600000);
+})();
+
+// Service Worker 등록
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
