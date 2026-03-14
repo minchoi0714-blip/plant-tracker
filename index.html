@@ -94,6 +94,35 @@
   .badge-snooze{background:var(--snooze-bg);color:var(--snooze)}
   .badge-ok{background:var(--ok-bg);color:var(--ok)}
   .badge-upcoming{background:var(--upcoming-bg);color:var(--upcoming)}
+  /* 병해/해충 케어 배지 */
+  .care-row{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+  .care-badge{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap;cursor:default}
+  .care-badge-disease{background:#f0f0fb;color:#7060cc}
+  .care-badge-pest{background:#fff4e8;color:#c07020}
+  @media(prefers-color-scheme:dark){
+    .care-badge-disease{background:#22204a;color:#b0a0ff}
+    .care-badge-pest{background:#3a2800;color:#ffb060}
+  }
+  .care-icon{font-size:12px;line-height:1}
+  /* 관리제 섹션 */
+  .care-section{margin-bottom:16px}
+  .care-section-title{font-size:12px;color:var(--text2);font-weight:600;margin-bottom:8px}
+  .care-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .care-item{border-radius:var(--radius-sm);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+  .care-item-disease{background:#f0f0fb}
+  .care-item-pest{background:#fff4e8}
+  @media(prefers-color-scheme:dark){
+    .care-item-disease{background:#22204a}
+    .care-item-pest{background:#2e1e00}
+  }
+  .care-item-header{display:flex;align-items:center;gap:5px}
+  .care-item-icon{font-size:14px}
+  .care-item-label{font-size:11px;font-weight:600;color:var(--text2)}
+  .care-item-value{font-size:13px;font-weight:500;color:var(--text)}
+  .care-record-btn{border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-family:inherit;cursor:pointer;transition:opacity .15s;font-weight:500}
+  .care-record-disease{background:#7060cc;color:#fff}
+  .care-record-pest{background:#c07020;color:#fff}
+  .care-record-btn:active{opacity:.7}
   .quick-water-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--green-light);color:var(--green);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .1s,background .1s;flex-shrink:0}
   .quick-water-btn:active{transform:scale(.9);background:var(--green);color:#fff}
   .progress-wrap{margin:8px 0 0;padding-bottom:13px}
@@ -241,6 +270,28 @@
       <div class="detail-item"><div class="detail-label">상태</div><div class="detail-value" id="dm-status"></div></div>
       <div class="detail-item"><div class="detail-label">마지막 물주기</div><div class="detail-value" id="dm-last"></div></div>
       <div class="detail-item"><div class="detail-label">다음 물주기</div><div class="detail-value" id="dm-next"></div></div>
+    </div>
+    <!-- 병해/해충 관리 -->
+    <div class="care-section">
+      <div class="care-section-title">관리제 기록</div>
+      <div class="care-grid">
+        <div class="care-item care-item-disease">
+          <div class="care-item-header">
+            <span class="care-item-icon">🍄</span>
+            <span class="care-item-label">병해관리제</span>
+          </div>
+          <div class="care-item-value" id="dm-disease">기록 없음</div>
+          <button class="care-record-btn care-record-disease" onclick="recordCare('disease')">오늘 투여</button>
+        </div>
+        <div class="care-item care-item-pest">
+          <div class="care-item-header">
+            <span class="care-item-icon">🐛</span>
+            <span class="care-item-label">해충관리제</span>
+          </div>
+          <div class="care-item-value" id="dm-pest">기록 없음</div>
+          <button class="care-record-btn care-record-pest" onclick="recordCare('pest')">오늘 투여</button>
+        </div>
+      </div>
     </div>
     <div class="memo-box" id="dm-memo-wrap"><div class="memo-label">💡 메모</div><div id="dm-memo"></div></div>
     <div class="history-section"><div class="history-title">최근 물주기 기록</div><div class="history-list" id="dm-history"></div></div>
@@ -460,9 +511,18 @@ function buildCard(p){
   const badgeClass={urgent:'badge-urgent',today:'badge-today',snooze:'badge-snooze',ok:'badge-ok',upcoming:'badge-upcoming'}[status];
   const nextStr=status==='snooze'?`미루기 중 (${formatDate(p.snoozeUntil)}까지)`:diff===0?'오늘':diff<0?`${-diff}일 지남`:`${diff}일 후`;
   const memoHtml=p.memo?`<div class="plant-memo">💡 ${p.memo}</div>`:'';
+
+  // 병해/해충 D+day
+  const diseaseDays = p.lastDisease ? diffDays(today(), p.lastDisease) : null;
+  const pestDays    = p.lastPest    ? diffDays(today(), p.lastPest)    : null;
+  const diseaseBadge = diseaseDays !== null
+    ? `<div class="care-badge care-badge-disease"><span class="care-icon">🍄</span>D+${diseaseDays}</div>` : '';
+  const pestBadge = pestDays !== null
+    ? `<div class="care-badge care-badge-pest"><span class="care-icon">🐛</span>D+${pestDays}</div>` : '';
+
   const card=document.createElement('div');card.className=`plant-card ${status}`;
-  card.onclick=(e)=>{if(!e.target.classList.contains('quick-water-btn'))openDetail(p.id)};
-  card.innerHTML=`<div class="card-inner"><div class="card-top"><div class="card-left"><div class="plant-icon">${p.icon}</div><div class="plant-info"><div class="plant-name">${p.name}</div><div class="plant-type">${p.type} · ${p.interval}일 간격</div><div class="plant-interval">다음: ${nextStr}</div>${memoHtml}</div></div><div class="card-right"><span class="status-badge ${badgeClass}">${label}</span><button class="quick-water-btn" onclick="quickWater(${p.id},event)">💧</button></div></div><div class="progress-wrap"><div class="progress-meta"><span>마지막: ${formatDate(p.lastWater)}</span><span>${progress}%</span></div><div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${progress}%"></div></div></div></div>`;
+  card.onclick=(e)=>openDetail(p.id);
+  card.innerHTML=`<div class="card-inner"><div class="card-top"><div class="card-left"><div class="plant-icon">${p.icon}</div><div class="plant-info"><div class="plant-name">${p.name}</div><div class="plant-type">${p.type} · ${p.interval}일 간격</div><div class="plant-interval">다음: ${nextStr}</div>${memoHtml}</div></div><div class="card-right"><span class="status-badge ${badgeClass}">${label}</span><div class="care-row">${diseaseBadge}${pestBadge}</div></div></div><div class="progress-wrap"><div class="progress-meta"><span>마지막: ${formatDate(p.lastWater)}</span><span>${progress}%</span></div><div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${progress}%"></div></div></div></div>`;
   return card;
 }
 
@@ -481,6 +541,11 @@ function openDetail(id){
   document.getElementById('dm-status').textContent=st[status];
   const mw=document.getElementById('dm-memo-wrap');
   if(p.memo){mw.style.display='';document.getElementById('dm-memo').textContent=p.memo}else mw.style.display='none';
+  // 병해/해충
+  const dEl=document.getElementById('dm-disease');
+  const pEl=document.getElementById('dm-pest');
+  if(p.lastDisease){const d=diffDays(today(),p.lastDisease);dEl.textContent=`${p.lastDisease} (D+${d})`}else dEl.textContent='기록 없음';
+  if(p.lastPest){const d=diffDays(today(),p.lastPest);pEl.textContent=`${p.lastPest} (D+${d})`}else pEl.textContent='기록 없음';
   const entries=(p.history||[]).slice(-6).reverse();
   document.getElementById('dm-history').innerHTML=entries.length?entries.map(d=>`<span class="history-chip">💧 ${d}</span>`).join(''):'<span style="font-size:12px;color:var(--text3)">기록 없음</span>';
   document.getElementById('snoozePicker').style.display='none';
@@ -514,13 +579,26 @@ async function deletePlant(){
   plants=plants.filter(x=>x.id!==activeDetailId);await savePlants();closeModal('detailModal');renderPlants();showToast('🗑️ 삭제되었습니다');
 }
 
-// ── 식물 폼 ──────────────────────────────────────────
+// ── 병해/해충 기록 ────────────────────────────────────
+async function recordCare(type){
+  const p=plants.find(x=>x.id===activeDetailId);if(!p)return;
+  const t=today();
+  if(type==='disease'){p.lastDisease=t;showToast(`🍄 병해관리제 투여 기록!`)}
+  else{p.lastPest=t;showToast(`🐛 해충관리제 투여 기록!`)}
+  await savePlants();
+  // 모달 내 텍스트 즉시 업데이트
+  const d=0;
+  if(type==='disease')document.getElementById('dm-disease').textContent=`${t} (D+0)`;
+  else document.getElementById('dm-pest').textContent=`${t} (D+0)`;
+  renderPlants();
+}
 function buildPlantForm(p){
-  const d=p||{icon:'🌱',name:'',type:'',interval:7,lastWater:today(),location:'se',memo:''};
+  const d=p||{icon:'🌱',name:'',type:'',interval:7,lastWater:today(),location:'se',memo:'',lastDisease:'',lastPest:''};
   return`<div class="form-section"><label class="form-label">아이콘</label><div class="icon-grid">${ICONS.map(ic=>`<div class="icon-opt${ic===d.icon?' selected':''}" onclick="selectIcon(this,'${ic}')">${ic}</div>`).join('')}</div><input type="hidden" id="f-icon" value="${d.icon}"></div>
 <div class="form-row"><div class="form-section"><label class="form-label">이름 *</label><input class="form-input" id="f-name" value="${d.name}" placeholder="식물 이름"></div><div class="form-section"><label class="form-label">종류</label><input class="form-input" id="f-type" value="${d.type}" placeholder="관엽식물"></div></div>
 <div class="form-row"><div class="form-section"><label class="form-label">물주기 간격 (일)</label><input class="form-input" type="number" id="f-interval" value="${d.interval}" min="1" oninput="updateNextPreview()"></div><div class="form-section"><label class="form-label">마지막 물주기</label><input class="form-input" type="date" id="f-lastwater" value="${d.lastWater}" oninput="updateNextPreview()"></div></div>
 <div class="form-section"><label class="form-label">장소</label><select class="form-select" id="f-location"><option value="se"${d.location==='se'?' selected':''}>🌤 남동향 베란다</option><option value="e"${d.location==='e'?' selected':''}>🌿 동향 거실창가</option></select></div>
+<div class="form-row"><div class="form-section"><label class="form-label">🍄 병해관리제 마지막 투여일</label><input class="form-input" type="date" id="f-disease" value="${d.lastDisease||''}"></div><div class="form-section"><label class="form-label">🐛 해충관리제 마지막 투여일</label><input class="form-input" type="date" id="f-pest" value="${d.lastPest||''}"></div></div>
 <div class="form-section"><label class="form-label">메모</label><textarea class="form-textarea" id="f-memo" placeholder="물주기 조건 등">${d.memo||''}</textarea></div>
 <div class="next-water-preview">다음 물주기 예정: <span id="nextPreviewDate">${addDays(d.lastWater,d.interval)}</span></div>`;
 }
@@ -533,13 +611,15 @@ async function saveEdit(){
   p.icon=document.getElementById('f-icon').value;p.name=name;p.type=document.getElementById('f-type').value.trim();
   p.interval=parseInt(document.getElementById('f-interval').value)||7;p.lastWater=document.getElementById('f-lastwater').value;
   p.location=document.getElementById('f-location').value;p.memo=document.getElementById('f-memo').value.trim();
+  p.lastDisease=document.getElementById('f-disease').value||'';
+  p.lastPest=document.getElementById('f-pest').value||'';
   await savePlants();closeModal('editModal');renderPlants();showToast('✅ 수정 완료!');
 }
 function openAddModal(){activeDetailId=null;document.getElementById('addForm').innerHTML=buildPlantForm(null);openModal('addModal')}
 async function saveAdd(){
   const name=document.getElementById('f-name').value.trim();if(!name){alert('이름을 입력해주세요');return}
   const newId=plants.length?Math.max(...plants.map(p=>p.id))+1:1;
-  plants.push({id:newId,icon:document.getElementById('f-icon').value||'🌱',name,type:document.getElementById('f-type').value.trim(),interval:parseInt(document.getElementById('f-interval').value)||7,lastWater:document.getElementById('f-lastwater').value||today(),location:document.getElementById('f-location').value||'se',memo:document.getElementById('f-memo').value.trim(),history:[]});
+  plants.push({id:newId,icon:document.getElementById('f-icon').value||'🌱',name,type:document.getElementById('f-type').value.trim(),interval:parseInt(document.getElementById('f-interval').value)||7,lastWater:document.getElementById('f-lastwater').value||today(),location:document.getElementById('f-location').value||'se',memo:document.getElementById('f-memo').value.trim(),lastDisease:document.getElementById('f-disease')?.value||'',lastPest:document.getElementById('f-pest')?.value||'',history:[]});
   await savePlants();closeModal('addModal');renderPlants();showToast('🌱 새 식물 추가!');
 }
 
