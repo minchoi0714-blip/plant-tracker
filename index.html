@@ -318,8 +318,8 @@
       <div class="settings-section-title">데이터 관리</div>
       <div class="data-box">
         <div class="data-box-title">📤 내보내기</div>
-        <div class="data-box-desc">현재 식물 데이터를 JSON 파일로 저장합니다. 새 기기로 옮기거나 백업할 때 사용하세요.</div>
-        <button class="btn btn-export btn-full" onclick="exportData()">📥 데이터 다운로드</button>
+        <div class="data-box-desc">데이터를 클립보드에 복사한 뒤 <strong>메모 앱</strong>에 붙여넣어 저장하세요. 복원할 땐 그 내용을 아래 가져오기에 붙여넣으면 됩니다.</div>
+        <button class="btn btn-export btn-full" onclick="copyDataToClipboard()" id="copyBtn">📋 클립보드에 복사</button>
       </div>
       <div class="data-box">
         <div class="data-box-title">📥 가져오기</div>
@@ -561,13 +561,18 @@ async function saveLocDescs(){
 }
 
 // ── 내보내기/가져오기 ─────────────────────────────────
-function exportData(){
-  const blob=new Blob([JSON.stringify({plants,locDescs},null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob),a=document.createElement('a');
-  const d=new Date();a.href=url;
-  a.download=`plant_tracker_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  showToast('📤 데이터 다운로드 완료!');
+function copyDataToClipboard(){
+  const json=JSON.stringify({plants,locDescs},null,2);
+  navigator.clipboard.writeText(json).then(()=>{
+    const btn=document.getElementById('copyBtn');
+    const orig=btn.textContent;
+    btn.textContent='✅ 복사 완료!';
+    showToast('📋 클립보드에 복사됐어요! 메모 앱에 붙여넣어 저장하세요.');
+    setTimeout(()=>{btn.textContent=orig},2500);
+  }).catch(()=>{
+    // clipboard API 실패 시 prompt로 폴백
+    prompt('아래 내용을 전체 선택(길게 누르기) 후 복사하세요:', json);
+  });
 }
 async function importData(){
   const raw=document.getElementById('importTextarea').value.trim();
