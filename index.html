@@ -99,10 +99,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .cb-disease{background:#f0f0fb;color:#7060cc}
 .cb-pest{background:#fff4e8;color:#c07020}
 .cb-nutri{background:#eaf6ea;color:#2d7a2d}
+.cb-pesticide{background:#fdf0f0;color:#b03030}
 @media(prefers-color-scheme:dark){
   .cb-disease{background:#22204a;color:#b0a0ff}
   .cb-pest{background:#3a2800;color:#ffb060}
   .cb-nutri{background:#1a2e1a;color:#6dba6d}
+  .cb-pesticide{background:#2e1a1a;color:#ff8080}
 }
 .progress-wrap{margin:8px 0 0;padding-bottom:13px}
 .progress-meta{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px}
@@ -139,15 +141,17 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 /* 관리제 섹션 (상세 모달) */
 .care-section{margin-bottom:16px}
 .care-section-title{font-size:12px;color:var(--text2);font-weight:600;margin-bottom:8px}
-.care-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.care-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .care-item{border-radius:var(--radius-sm);padding:10px 10px;display:flex;flex-direction:column;gap:5px}
 .care-item-disease{background:#f0f0fb}
 .care-item-pest{background:#fff4e8}
 .care-item-nutri{background:#eaf6ea}
+.care-item-pesticide{background:#fdf0f0}
 @media(prefers-color-scheme:dark){
   .care-item-disease{background:#22204a}
   .care-item-pest{background:#2e1e00}
   .care-item-nutri{background:#1a2e1a}
+  .care-item-pesticide{background:#2e1a1a}
 }
 .care-item-header{display:flex;align-items:center;gap:4px}
 .care-item-icon{font-size:13px}
@@ -158,6 +162,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .crb-disease{background:#7060cc;color:#fff}
 .crb-pest{background:#c07020;color:#fff}
 .crb-nutri{background:#2d7a2d;color:#fff}
+.crb-pesticide{background:#b03030;color:#fff}
 /* 버튼 */
 .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .modal-actions-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -294,6 +299,11 @@ select option{background:var(--card)}
           <div class="care-item-header"><span class="care-item-icon">🍼</span><span class="care-item-label">영양제</span></div>
           <div class="care-item-value" id="dm-nutri">기록 없음</div>
           <button class="care-record-btn crb-nutri" onclick="recordCare('nutri')">오늘 투여</button>
+        </div>
+        <div class="care-item care-item-pesticide">
+          <div class="care-item-header"><span class="care-item-icon">🧪</span><span class="care-item-label">농약</span></div>
+          <div class="care-item-value" id="dm-pesticide">기록 없음</div>
+          <button class="care-record-btn crb-pesticide" onclick="recordCare('pesticide')">오늘 투여</button>
         </div>
       </div>
     </div>
@@ -435,17 +445,17 @@ function getLocDesc(locId){const l=locs.find(x=>x.id===locId);return l?l.desc:''
 function getStatus(p){
   const t=today();
   if(p.snoozeUntil&&p.snoozeUntil>t)return'snooze';
-  const diff=diffDays(addDays(p.lastWater,p.interval),t);
+  const diff=diffDays(addDays(p.lastWater,p.interval+1),t);
   if(diff<0)return'urgent';if(diff===0)return'today';if(diff<=3)return'upcoming';return'ok';
 }
 function getStatusLabel(s,p){
   if(s==='snooze')return`💤 D+${diffDays(p.snoozeUntil,today())}`;
-  const diff=diffDays(addDays(p.lastWater,p.interval),today());
+  const diff=diffDays(addDays(p.lastWater,p.interval+1),today());
   if(s==='urgent')return`🚨 D${diff}`;if(s==='today')return'💧 오늘';
   if(s==='upcoming')return`🌱 D-${diff}`;return`✅ D-${diff}`;
 }
 function getStatusOrder(s){return{urgent:0,today:1,snooze:2,upcoming:3,ok:4}[s]??5}
-function getSortKey(p){const s=getStatus(p);const diff=diffDays(addDays(p.lastWater,p.interval),today());return[getStatusOrder(s),diff]}
+function getSortKey(p){const s=getStatus(p);const diff=diffDays(addDays(p.lastWater,p.interval+1),today());return[getStatusOrder(s),diff]}
 
 // ── 저장 ────────────────────────────────────────────
 async function loadData(){
@@ -534,7 +544,7 @@ function renderPlants(){
 }
 
 function buildCard(p, showLoc){
-  const status=getStatus(p),next=addDays(p.lastWater,p.interval);
+  const status=getStatus(p),next=addDays(p.lastWater,p.interval+1);
   const elapsed=diffDays(today(),p.lastWater),progress=Math.min(Math.round(elapsed/p.interval*100),100);
   const diff=diffDays(next,today()),label=getStatusLabel(status,p);
   const fillClass=status==='urgent'?'fill-urgent':status==='today'?'fill-upcoming':status==='snooze'?'fill-snooze':progress>70?'fill-upcoming':'fill-ok';
@@ -546,10 +556,12 @@ function buildCard(p, showLoc){
   const dD=p.lastDisease?diffDays(today(),p.lastDisease):null;
   const pD=p.lastPest?diffDays(today(),p.lastPest):null;
   const nD=p.lastNutri?diffDays(today(),p.lastNutri):null;
+  const psD=p.lastPesticide?diffDays(today(),p.lastPesticide):null;
   const careBadges=[
     dD!==null?`<span class="care-badge cb-disease">🍄 D+${dD}</span>`:'',
     pD!==null?`<span class="care-badge cb-pest">🐛 D+${pD}</span>`:'',
-    nD!==null?`<span class="care-badge cb-nutri">🍼 D+${nD}</span>`:''
+    nD!==null?`<span class="care-badge cb-nutri">🍼 D+${nD}</span>`:'',
+    psD!==null?`<span class="care-badge cb-pesticide">🧪 D+${psD}</span>`:''
   ].join('');
 
   const card=document.createElement('div');card.className=`plant-card ${status}`;
@@ -562,7 +574,7 @@ function buildCard(p, showLoc){
 function openDetail(id){
   const p=plants.find(x=>x.id===id);if(!p)return;
   activeDetailId=id;
-  const status=getStatus(p),next=addDays(p.lastWater,p.interval),diff=diffDays(next,today());
+  const status=getStatus(p),next=addDays(p.lastWater,p.interval+1),diff=diffDays(next,today());
   document.getElementById('dm-icon').textContent=p.icon;
   document.getElementById('dm-name').textContent=p.name;
   document.getElementById('dm-sub').textContent=`${p.type} · ${getLocLabel(p.location)}`;
@@ -580,6 +592,7 @@ function openDetail(id){
   document.getElementById('dm-disease').textContent=fmt('disease',p.lastDisease);
   document.getElementById('dm-pest').textContent=fmt('pest',p.lastPest);
   document.getElementById('dm-nutri').textContent=fmt('nutri',p.lastNutri);
+  document.getElementById('dm-pesticide').textContent=fmt('pesticide',p.lastPesticide);
   document.getElementById('snoozePicker').style.display='none';
   snoozeSelectedDays=2;
   document.querySelectorAll('.snooze-opt').forEach(b=>b.classList.toggle('selected',parseInt(b.textContent)===2));
@@ -607,10 +620,11 @@ async function deletePlant(){
 async function recordCare(type){
   const p=plants.find(x=>x.id===activeDetailId);if(!p)return;
   const t=today();
-  const labels={disease:'🍄 병해관리제',pest:'🐛 해충관리제',nutri:'🍼 영양제'};
+  const labels={disease:'🍄 병해관리제',pest:'🐛 해충관리제',nutri:'🍼 영양제',pesticide:'🧪 농약'};
   if(type==='disease')p.lastDisease=t;
   else if(type==='pest')p.lastPest=t;
-  else p.lastNutri=t;
+  else if(type==='nutri')p.lastNutri=t;
+  else p.lastPesticide=t;
   await savePlants();
   document.getElementById(`dm-${type}`).textContent=`${t} (D+0)`;
   renderPlants();showToast(`${labels[type]} 투여 기록 완료!`);
@@ -618,7 +632,7 @@ async function recordCare(type){
 
 // ── 식물 폼 ──────────────────────────────────────────
 function buildPlantForm(p){
-  const d=p||{icon:'🌱',name:'',type:'',interval:7,lastWater:today(),location:locs[0]?.id||'se',memo:'',lastDisease:'',lastPest:'',lastNutri:''};
+  const d=p||{icon:'🌱',name:'',type:'',interval:7,lastWater:today(),location:locs[0]?.id||'se',memo:'',lastDisease:'',lastPest:'',lastNutri:'',lastPesticide:''};
   const locOptions=locs.map(l=>`<option value="${l.id}"${d.location===l.id?' selected':''}>${l.label}</option>`).join('');
   return`<div class="form-section"><label class="form-label">아이콘</label><div class="icon-grid">${ICONS.map(ic=>`<div class="icon-opt${ic===d.icon?' selected':''}" onclick="selectIcon(this,'${ic}')">${ic}</div>`).join('')}</div><input type="hidden" id="f-icon" value="${d.icon}"></div>
 <div class="form-row"><div class="form-section"><label class="form-label">이름 *</label><input class="form-input" id="f-name" value="${d.name}" placeholder="식물 이름"></div><div class="form-section"><label class="form-label">종류</label><input class="form-input" id="f-type" value="${d.type}" placeholder="관엽식물"></div></div>
@@ -626,11 +640,12 @@ function buildPlantForm(p){
 <div class="form-section"><label class="form-label">장소</label><select class="form-select" id="f-location">${locOptions}</select></div>
 <div class="form-row"><div class="form-section"><label class="form-label">🍄 병해관리제 투여일</label><input class="form-input" type="date" id="f-disease" value="${d.lastDisease||''}"></div><div class="form-section"><label class="form-label">🐛 해충관리제 투여일</label><input class="form-input" type="date" id="f-pest" value="${d.lastPest||''}"></div></div>
 <div class="form-section"><label class="form-label">🍼 영양제 투여일</label><input class="form-input" type="date" id="f-nutri" value="${d.lastNutri||''}"></div>
+<div class="form-section"><label class="form-label">🧪 농약 투여일</label><input class="form-input" type="date" id="f-pesticide" value="${d.lastPesticide||''}"></div>
 <div class="form-section"><label class="form-label">메모</label><textarea class="form-textarea" id="f-memo" placeholder="물주기 조건 등">${d.memo||''}</textarea></div>
-<div class="next-water-preview">다음 물주기 예정: <span id="nextPreviewDate">${addDays(d.lastWater,d.interval)}</span></div>`;
+<div class="next-water-preview">다음 물주기 예정: <span id="nextPreviewDate">${addDays(d.lastWater,d.interval+1)}</span></div>`;
 }
 function selectIcon(el,icon){document.querySelectorAll('.icon-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');document.getElementById('f-icon').value=icon}
-function updateNextPreview(){const lw=document.getElementById('f-lastwater')?.value,iv=parseInt(document.getElementById('f-interval')?.value);if(lw&&iv)document.getElementById('nextPreviewDate').textContent=addDays(lw,iv)}
+function updateNextPreview(){const lw=document.getElementById('f-lastwater')?.value,iv=parseInt(document.getElementById('f-interval')?.value);if(lw&&iv)document.getElementById('nextPreviewDate').textContent=addDays(lw,iv+1)}
 function openEditFromDetail(){const p=plants.find(x=>x.id===activeDetailId);if(!p)return;closeModal('detailModal');setTimeout(()=>{document.getElementById('editForm').innerHTML=buildPlantForm(p);openModal('editModal')},200)}
 async function saveEdit(){
   const p=plants.find(x=>x.id===activeDetailId);if(!p)return;
@@ -641,13 +656,14 @@ async function saveEdit(){
   p.lastDisease=document.getElementById('f-disease').value||'';
   p.lastPest=document.getElementById('f-pest').value||'';
   p.lastNutri=document.getElementById('f-nutri').value||'';
+  p.lastPesticide=document.getElementById('f-pesticide').value||'';
   await savePlants();closeModal('editModal');renderPlants();showToast('✅ 수정 완료!');
 }
 function openAddModal(){activeDetailId=null;document.getElementById('addForm').innerHTML=buildPlantForm(null);openModal('addModal')}
 async function saveAdd(){
   const name=document.getElementById('f-name').value.trim();if(!name){alert('이름을 입력해주세요');return}
   const newId=plants.length?Math.max(...plants.map(p=>p.id))+1:1;
-  plants.push({id:newId,icon:document.getElementById('f-icon').value||'🌱',name,type:document.getElementById('f-type').value.trim(),interval:parseInt(document.getElementById('f-interval').value)||7,lastWater:document.getElementById('f-lastwater').value||today(),location:document.getElementById('f-location').value||locs[0]?.id||'se',memo:document.getElementById('f-memo').value.trim(),lastDisease:document.getElementById('f-disease')?.value||'',lastPest:document.getElementById('f-pest')?.value||'',lastNutri:document.getElementById('f-nutri')?.value||'',history:[]});
+  plants.push({id:newId,icon:document.getElementById('f-icon').value||'🌱',name,type:document.getElementById('f-type').value.trim(),interval:parseInt(document.getElementById('f-interval').value)||7,lastWater:document.getElementById('f-lastwater').value||today(),location:document.getElementById('f-location').value||locs[0]?.id||'se',memo:document.getElementById('f-memo').value.trim(),lastDisease:document.getElementById('f-disease')?.value||'',lastPest:document.getElementById('f-pest')?.value||'',lastNutri:document.getElementById('f-nutri')?.value||'',lastPesticide:document.getElementById('f-pesticide')?.value||'',history:[]});
   await savePlants();closeModal('addModal');renderPlants();showToast('🌱 새 식물 추가!');
 }
 
