@@ -59,6 +59,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .tab-btn{flex-shrink:0;padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap}
 .tab-btn.active{background:var(--green);border-color:var(--green);color:#fff}
 .filter-divider{width:1px;background:var(--border);flex-shrink:0;margin:4px 2px}
+.sort-row{display:flex;gap:6px;padding-bottom:14px;align-items:center;overflow-x:auto;scrollbar-width:none}
+.sort-row::-webkit-scrollbar{display:none}
+.sort-label{font-size:11px;color:var(--text3);flex-shrink:0}
+.sort-btn{flex-shrink:0;padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap}
+.sort-btn.active{background:var(--snooze);border-color:var(--snooze);color:#fff}
 
 /* LIST */
 .plant-list{padding:16px}
@@ -261,6 +266,11 @@ select option{background:var(--card)}
       <button class="tab-btn" id="tabStat-upcoming" onclick="setStatFilter('upcoming')">예정</button>
       <button class="tab-btn" id="tabStat-ok" onclick="setStatFilter('ok')">양호</button>
     </div>
+    <div class="sort-row">
+      <span class="sort-label">정렬</span>
+      <button class="sort-btn active" id="sortBtn-status" onclick="setSortMode('status',this)">물주기순</button>
+      <button class="sort-btn" id="sortBtn-alpha" onclick="setSortMode('alpha',this)">가나다순</button>
+    </div>
   </div>
   <div class="plant-list" id="plantList"></div>
   <div style="height:80px"></div>
@@ -430,10 +440,10 @@ const DEFAULT_PLANTS=[
   {id:20,icon:'🌱',name:'스킨답서스',          type:'관엽식물',interval:10,lastWater:'2026-03-17',location:'e', memo:'겉흙 완전히 마르면 물주기',history:[]}
 ];
 
-let plants=[], locs=[], locFilter='all', statFilter='all', activeDetailId=null, snoozeSelectedDays=2;
+let plants=[], locs=[], locFilter='all', statFilter='all', sortMode='status', activeDetailId=null, snoozeSelectedDays=2;
 
 // ── 유틸 ────────────────────────────────────────────
-function today(){return new Date().toISOString().slice(0,10)}
+function today(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function parseDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
 function addDays(s,n){const d=parseDate(s);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
 function diffDays(a,b){return Math.round((parseDate(a)-parseDate(b))/86400000)}
@@ -445,17 +455,17 @@ function getLocDesc(locId){const l=locs.find(x=>x.id===locId);return l?l.desc:''
 function getStatus(p){
   const t=today();
   if(p.snoozeUntil&&p.snoozeUntil>t)return'snooze';
-  const diff=diffDays(addDays(p.lastWater,p.interval+1),t);
+  const diff=diffDays(addDays(p.lastWater,p.interval),t);
   if(diff<0)return'urgent';if(diff===0)return'today';if(diff<=3)return'upcoming';return'ok';
 }
 function getStatusLabel(s,p){
   if(s==='snooze')return`💤 D+${diffDays(p.snoozeUntil,today())}`;
-  const diff=diffDays(addDays(p.lastWater,p.interval+1),today());
+  const diff=diffDays(addDays(p.lastWater,p.interval),today());
   if(s==='urgent')return`🚨 D${diff}`;if(s==='today')return'💧 오늘';
   if(s==='upcoming')return`🌱 D-${diff}`;return`✅ D-${diff}`;
 }
 function getStatusOrder(s){return{urgent:0,today:1,snooze:2,upcoming:3,ok:4}[s]??5}
-function getSortKey(p){const s=getStatus(p);const diff=diffDays(addDays(p.lastWater,p.interval+1),today());return[getStatusOrder(s),diff]}
+function getSortKey(p){const s=getStatus(p);const diff=diffDays(addDays(p.lastWater,p.interval),today());return[getStatusOrder(s),diff]}
 
 // ── 저장 ────────────────────────────────────────────
 async function loadData(){
@@ -525,7 +535,16 @@ function renderPlants(){
     if(statFilter==='ok'&&s!=='ok')return false;
     return true;
   });
-  filtered.sort((a,b)=>{const[oa,da]=getSortKey(a),[ob,db]=getSortKey(b);return oa!==ob?oa-ob:da-db});
+  filtered.sort((a,b)=>{
+    if(sortMode==='alpha'){
+      return a.name.localeCompare(b.name,'ko');
+    }
+    // 물주기순 (기본): 상태 우선, 같은 상태면 D-day 가까운 순, 같으면 가나다순
+    const[oa,da]=getSortKey(a),[ob,db]=getSortKey(b);
+    if(oa!==ob)return oa-ob;
+    if(da!==db)return da-db;
+    return a.name.localeCompare(b.name,'ko');
+  });
   if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">🌵</div><div class="empty-text">해당하는 식물이 없어요</div></div>';return}
 
   if(locFilter==='all'){
@@ -544,7 +563,7 @@ function renderPlants(){
 }
 
 function buildCard(p, showLoc){
-  const status=getStatus(p),next=addDays(p.lastWater,p.interval+1);
+  const status=getStatus(p),next=addDays(p.lastWater,p.interval);
   const elapsed=diffDays(today(),p.lastWater),progress=Math.min(Math.round(elapsed/p.interval*100),100);
   const diff=diffDays(next,today()),label=getStatusLabel(status,p);
   const fillClass=status==='urgent'?'fill-urgent':status==='today'?'fill-upcoming':status==='snooze'?'fill-snooze':progress>70?'fill-upcoming':'fill-ok';
@@ -574,7 +593,7 @@ function buildCard(p, showLoc){
 function openDetail(id){
   const p=plants.find(x=>x.id===id);if(!p)return;
   activeDetailId=id;
-  const status=getStatus(p),next=addDays(p.lastWater,p.interval+1),diff=diffDays(next,today());
+  const status=getStatus(p),next=addDays(p.lastWater,p.interval),diff=diffDays(next,today());
   document.getElementById('dm-icon').textContent=p.icon;
   document.getElementById('dm-name').textContent=p.name;
   document.getElementById('dm-sub').textContent=`${p.type} · ${getLocLabel(p.location)}`;
@@ -642,29 +661,37 @@ function buildPlantForm(p){
 <div class="form-section"><label class="form-label">🍼 영양제 투여일</label><input class="form-input" type="date" id="f-nutri" value="${d.lastNutri||''}"></div>
 <div class="form-section"><label class="form-label">🧪 농약 투여일</label><input class="form-input" type="date" id="f-pesticide" value="${d.lastPesticide||''}"></div>
 <div class="form-section"><label class="form-label">메모</label><textarea class="form-textarea" id="f-memo" placeholder="물주기 조건 등">${d.memo||''}</textarea></div>
-<div class="next-water-preview">다음 물주기 예정: <span id="nextPreviewDate">${addDays(d.lastWater,d.interval+1)}</span></div>`;
+<div class="next-water-preview">다음 물주기 예정: <span id="nextPreviewDate">${addDays(d.lastWater,d.interval)}</span></div>`;
 }
 function selectIcon(el,icon){document.querySelectorAll('.icon-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');document.getElementById('f-icon').value=icon}
-function updateNextPreview(){const lw=document.getElementById('f-lastwater')?.value,iv=parseInt(document.getElementById('f-interval')?.value);if(lw&&iv)document.getElementById('nextPreviewDate').textContent=addDays(lw,iv+1)}
+function updateNextPreview(){const lw=document.getElementById('f-lastwater')?.value,iv=parseInt(document.getElementById('f-interval')?.value);if(lw&&iv)document.getElementById('nextPreviewDate').textContent=addDays(lw,iv)}
 function openEditFromDetail(){const p=plants.find(x=>x.id===activeDetailId);if(!p)return;closeModal('detailModal');setTimeout(()=>{document.getElementById('editForm').innerHTML=buildPlantForm(p);openModal('editModal')},200)}
+let _editSaving=false;
 async function saveEdit(){
-  const p=plants.find(x=>x.id===activeDetailId);if(!p)return;
-  const name=document.getElementById('f-name').value.trim();if(!name){alert('이름을 입력해주세요');return}
-  p.icon=document.getElementById('f-icon').value;p.name=name;p.type=document.getElementById('f-type').value.trim();
-  p.interval=parseInt(document.getElementById('f-interval').value)||7;p.lastWater=document.getElementById('f-lastwater').value;
-  p.location=document.getElementById('f-location').value;p.memo=document.getElementById('f-memo').value.trim();
-  p.lastDisease=document.getElementById('f-disease').value||'';
-  p.lastPest=document.getElementById('f-pest').value||'';
-  p.lastNutri=document.getElementById('f-nutri').value||'';
-  p.lastPesticide=document.getElementById('f-pesticide').value||'';
-  await savePlants();closeModal('editModal');renderPlants();showToast('✅ 수정 완료!');
+  if(_editSaving)return;_editSaving=true;
+  try{
+    const p=plants.find(x=>x.id===activeDetailId);if(!p)return;
+    const name=document.getElementById('f-name').value.trim();if(!name){alert('이름을 입력해주세요');return}
+    p.icon=document.getElementById('f-icon').value;p.name=name;p.type=document.getElementById('f-type').value.trim();
+    p.interval=parseInt(document.getElementById('f-interval').value)||7;p.lastWater=document.getElementById('f-lastwater').value;
+    p.location=document.getElementById('f-location').value;p.memo=document.getElementById('f-memo').value.trim();
+    p.lastDisease=document.getElementById('f-disease').value||'';
+    p.lastPest=document.getElementById('f-pest').value||'';
+    p.lastNutri=document.getElementById('f-nutri').value||'';
+    p.lastPesticide=document.getElementById('f-pesticide').value||'';
+    await savePlants();closeModal('editModal');renderPlants();showToast('✅ 수정 완료!');
+  }finally{setTimeout(()=>{_editSaving=false},1000)}
 }
 function openAddModal(){activeDetailId=null;document.getElementById('addForm').innerHTML=buildPlantForm(null);openModal('addModal')}
+let _saving=false;
 async function saveAdd(){
-  const name=document.getElementById('f-name').value.trim();if(!name){alert('이름을 입력해주세요');return}
-  const newId=plants.length?Math.max(...plants.map(p=>p.id))+1:1;
-  plants.push({id:newId,icon:document.getElementById('f-icon').value||'🌱',name,type:document.getElementById('f-type').value.trim(),interval:parseInt(document.getElementById('f-interval').value)||7,lastWater:document.getElementById('f-lastwater').value||today(),location:document.getElementById('f-location').value||locs[0]?.id||'se',memo:document.getElementById('f-memo').value.trim(),lastDisease:document.getElementById('f-disease')?.value||'',lastPest:document.getElementById('f-pest')?.value||'',lastNutri:document.getElementById('f-nutri')?.value||'',lastPesticide:document.getElementById('f-pesticide')?.value||'',history:[]});
-  await savePlants();closeModal('addModal');renderPlants();showToast('🌱 새 식물 추가!');
+  if(_saving)return;_saving=true;
+  try{
+    const name=document.getElementById('f-name').value.trim();if(!name){alert('이름을 입력해주세요');return}
+    const newId=plants.length?Math.max(...plants.map(p=>p.id))+1:1;
+    plants.push({id:newId,icon:document.getElementById('f-icon').value||'🌱',name,type:document.getElementById('f-type').value.trim(),interval:parseInt(document.getElementById('f-interval').value)||7,lastWater:document.getElementById('f-lastwater').value||today(),location:document.getElementById('f-location').value||locs[0]?.id||'se',memo:document.getElementById('f-memo').value.trim(),lastDisease:document.getElementById('f-disease')?.value||'',lastPest:document.getElementById('f-pest')?.value||'',lastNutri:document.getElementById('f-nutri')?.value||'',lastPesticide:document.getElementById('f-pesticide')?.value||'',history:[]});
+    await savePlants();closeModal('addModal');renderPlants();showToast('🌱 새 식물 추가!');
+  }finally{setTimeout(()=>{_saving=false},1000)}
 }
 
 // ── 설정 / 장소 관리 ──────────────────────────────────
@@ -776,6 +803,12 @@ async function importData(){
 }
 
 // ── 필터 ────────────────────────────────────────────
+function setSortMode(val,btn){
+  sortMode=val;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlants();
+}
 function setLocFilter(val,btn){
   locFilter=val;
   document.getElementById('locTab-all').classList.toggle('active',val==='all');
