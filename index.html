@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f5f2ed;--bg2:#ede9e2;--card:#ffffff;--card2:#faf8f5;
+  --bg:#f5f2ed;--bg2:#ede9e2;--card:#fff;--card2:#faf8f5;
   --text:#2d2a25;--text2:#6b6560;--text3:#9e9990;--border:#e0dbd3;
   --green:#4a7c59;--green-light:#e8f2ec;
   --urgent:#E24B4A;--urgent-bg:#fdeaea;
@@ -21,7 +21,7 @@
   --snooze:#7F77DD;--snooze-bg:#f0effe;
   --ok:#9e9990;--ok-bg:#f2f0ec;
   --upcoming:#4a7c59;--upcoming-bg:#e8f2ec;
-  --shadow:0 2px 12px rgba(0,0,0,0.06);
+  --shadow:0 2px 12px rgba(0,0,0,.06);
   --radius:16px;--radius-sm:10px;
 }
 @media(prefers-color-scheme:dark){:root{
@@ -29,16 +29,16 @@
   --text:#ede9e2;--text2:#a09990;--text3:#6b6560;--border:#3a3830;
   --green-light:#1e2e23;--urgent-bg:#2e1a1a;--today-bg:#2e2215;
   --snooze-bg:#201e35;--ok-bg:#252320;--upcoming-bg:#1e2e23;
-  --shadow:0 2px 12px rgba(0,0,0,0.3);
+  --shadow:0 2px 12px rgba(0,0,0,.3);
 }}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 .app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg)}
 
-/* HEADER */
-.header{background:var(--card);padding:20px 20px 0;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+/* HEADER — not sticky, scrolls with content */
+.header{background:var(--card);padding:20px 20px 0;border-bottom:1px solid var(--border);box-shadow:var(--shadow)}
 .header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
-.app-title{font-family:'Gowun Dodum',serif;font-size:22px;color:var(--green);letter-spacing:-0.5px}
+.app-title{font-family:'Gowun Dodum',serif;font-size:22px;color:var(--green);letter-spacing:-.5px}
 .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .date-main{font-size:15px;font-weight:500;color:var(--text);text-align:right}
 .date-day{font-size:12px;color:var(--text2);margin-top:1px;text-align:right}
@@ -46,34 +46,48 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .weather-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg2);border-radius:var(--radius-sm);margin-bottom:14px;font-size:13px;color:var(--text2)}
 .weather-emoji{font-size:18px}
 .weather-loading{color:var(--text3);font-style:italic;font-size:12px}
+
+/* SUMMARY — 3 cards: emergency / today / upcoming */
 .summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
 .summary-card{background:var(--card2);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;border:1.5px solid var(--border);cursor:pointer;transition:transform .15s}
 .summary-card:active{transform:scale(.97)}
 .summary-num{font-size:24px;font-weight:700;line-height:1}
 .summary-label{font-size:10px;color:var(--text2);margin-top:3px}
-.summary-card.urgent .summary-num{color:var(--urgent)}
-.summary-card.today .summary-num{color:var(--today)}
-.summary-card.total .summary-num{color:var(--green)}
-.tabs-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:14px;scrollbar-width:none}
-.tabs-row::-webkit-scrollbar{display:none}
+.summary-card.s-urgent .summary-num{color:var(--urgent)}
+.summary-card.s-today .summary-num{color:var(--today)}
+.summary-card.s-upcoming .summary-num{color:var(--upcoming)}
+
+/* FILTER ROW */
+.filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
 .tab-btn{flex-shrink:0;padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap}
 .tab-btn.active{background:var(--green);border-color:var(--green);color:#fff}
 .filter-divider{width:1px;background:var(--border);flex-shrink:0;margin:4px 2px}
-.sort-row{display:flex;gap:6px;padding-bottom:14px;align-items:center;overflow-x:auto;scrollbar-width:none}
+
+/* SORT ROW */
+.sort-row{display:flex;gap:6px;align-items:center;padding-bottom:14px;overflow-x:auto;scrollbar-width:none}
 .sort-row::-webkit-scrollbar{display:none}
 .sort-label{font-size:11px;color:var(--text3);flex-shrink:0}
 .sort-btn{flex-shrink:0;padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap}
 .sort-btn.active{background:var(--snooze);border-color:var(--snooze);color:#fff}
 
-/* LIST */
-.plant-list{padding:16px}
+/* SEARCH BAR */
+.search-bar{display:none;padding:0 16px 12px;background:var(--card);border-bottom:1px solid var(--border)}
+.search-bar.open{display:block}
+.search-inner{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:var(--radius-sm);padding:8px 12px}
+.search-input{flex:1;border:none;background:transparent;font-size:14px;color:var(--text);font-family:inherit;outline:none}
+.search-input::placeholder{color:var(--text3)}
+.search-clear{background:none;border:none;font-size:16px;cursor:pointer;color:var(--text3);padding:0;line-height:1}
+
+/* SECTION HEADER */
 .section-header{display:flex;align-items:flex-start;justify-content:space-between;margin:8px 0 12px;padding:10px 14px;background:var(--card);border-radius:var(--radius-sm);border-left:4px solid var(--green);box-shadow:var(--shadow)}
 .section-header-info{flex:1;min-width:0}
 .section-title{font-size:13px;font-weight:600;color:var(--text)}
 .section-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4}
 .section-edit-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--text3);cursor:pointer;white-space:nowrap;margin-left:8px;flex-shrink:0;font-family:inherit}
 
-/* CARD */
+/* PLANT CARD */
+.plant-list{padding:16px}
 .plant-card{background:var(--card);border-radius:var(--radius);margin-bottom:10px;border-left:4px solid var(--border);box-shadow:var(--shadow);cursor:pointer;transition:transform .15s;overflow:hidden}
 .plant-card:active{transform:scale(.99);box-shadow:none}
 .plant-card.urgent{border-left-color:var(--urgent)}
@@ -98,7 +112,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .badge-snooze{background:var(--snooze-bg);color:var(--snooze)}
 .badge-ok{background:var(--ok-bg);color:var(--ok)}
 .badge-upcoming{background:var(--upcoming-bg);color:var(--upcoming)}
-/* 케어 배지 */
 .care-row{display:flex;flex-direction:column;gap:3px;align-items:flex-end}
 .care-badge{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap}
 .cb-disease{background:#f0f0fb;color:#7060cc}
@@ -117,10 +130,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .progress-fill{height:100%;border-radius:3px;transition:width .3s}
 .fill-ok{background:var(--green)}.fill-upcoming{background:var(--today)}.fill-urgent{background:var(--urgent)}.fill-snooze{background:var(--snooze)}
 
-/* FAB */
-.fab{position:fixed;bottom:24px;right:calc(50% - 240px + 20px);width:52px;height:52px;border-radius:50%;background:var(--green);color:#fff;font-size:26px;border:none;box-shadow:0 4px 16px rgba(74,124,89,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:200;transition:transform .15s}
+/* FAB area */
+.fab-area{position:fixed;bottom:24px;right:calc(50% - 240px + 20px);display:flex;flex-direction:column;gap:10px;align-items:center;z-index:200}
+@media(max-width:480px){.fab-area{right:20px}}
+.fab{width:52px;height:52px;border-radius:50%;background:var(--green);color:#fff;font-size:26px;border:none;box-shadow:0 4px 16px rgba(74,124,89,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s}
 .fab:active{transform:scale(.93)}
-@media(max-width:480px){.fab{right:20px}}
+.fab-search{width:44px;height:44px;border-radius:50%;background:var(--card);color:var(--text2);font-size:20px;border:1.5px solid var(--border);box-shadow:var(--shadow);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.fab-search:active{transform:scale(.93)}
+.fab-search.active{background:var(--snooze);color:#fff;border-color:var(--snooze)}
 
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s;pointer-events:none}
@@ -143,11 +160,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .history-title{font-size:12px;color:var(--text2);font-weight:600;margin-bottom:8px}
 .history-list{display:flex;flex-wrap:wrap;gap:6px}
 .history-chip{background:var(--green-light);color:var(--green);font-size:11px;padding:3px 8px;border-radius:20px}
-/* 관리제 섹션 (상세 모달) */
+
+/* CARE SECTION */
 .care-section{margin-bottom:16px}
 .care-section-title{font-size:12px;color:var(--text2);font-weight:600;margin-bottom:8px}
 .care-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.care-item{border-radius:var(--radius-sm);padding:10px 10px;display:flex;flex-direction:column;gap:5px}
+.care-item{border-radius:var(--radius-sm);padding:10px;display:flex;flex-direction:column;gap:5px}
 .care-item-disease{background:#f0f0fb}
 .care-item-pest{background:#fff4e8}
 .care-item-nutri{background:#eaf6ea}
@@ -168,7 +186,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .crb-pest{background:#c07020;color:#fff}
 .crb-nutri{background:#2d7a2d;color:#fff}
 .crb-pesticide{background:#b03030;color:#fff}
-/* 버튼 */
+
+/* BUTTONS */
 .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .modal-actions-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .btn{padding:11px 14px;border-radius:var(--radius-sm);border:none;font-size:13px;font-family:inherit;font-weight:500;cursor:pointer;transition:opacity .15s,transform .1s;text-align:center;display:flex;align-items:center;justify-content:center;gap:5px}
@@ -183,7 +202,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .btn-full{grid-column:1/-1}
 .btn-export{background:var(--upcoming-bg);color:var(--green)}
 .btn-import{background:var(--today-bg);color:var(--today)}
-/* 스누즈 */
+
+/* SNOOZE */
 .snooze-picker{background:var(--bg2);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px}
 .snooze-title{font-size:13px;font-weight:600;margin-bottom:10px}
 .snooze-options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
@@ -193,44 +213,57 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .snooze-input{width:70px;padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);font-size:13px;color:var(--text);font-family:inherit;text-align:center}
 .snooze-input:focus{outline:none;border-color:var(--snooze)}
 .snooze-unit{font-size:12px;color:var(--text2)}
-/* 폼 */
+
+/* FORM */
 .form-section{margin-bottom:16px}
 .form-label{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px;display:block}
 .form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;transition:border-color .15s}
 .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--green)}
 .form-textarea{resize:none;height:80px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:4px}
+
+/* ICON PICKER — swipeable 2 pages */
+.icon-picker-wrap{margin-bottom:4px;overflow:hidden}
+.icon-pages{display:flex;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.icon-page{min-width:100%;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .icon-opt{aspect-ratio:1;border-radius:10px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;background:var(--bg2);transition:border-color .1s,transform .1s}
 .icon-opt.selected{border-color:var(--green);background:var(--green-light);transform:scale(1.05)}
-.next-water-preview{font-size:12px;color:var(--text2);background:var(--green-light);padding:8px 12px;border-radius:8px;margin-top:8px}
-.next-water-preview span{color:var(--green);font-weight:600}
-/* 설정 */
+.icon-page-dots{display:flex;justify-content:center;gap:6px;margin:6px 0 4px}
+.icon-dot{width:6px;height:6px;border-radius:50%;background:var(--border);transition:background .2s;cursor:pointer}
+.icon-dot.active{background:var(--green)}
+
+/* 장소 X 옵션 */
+.loc-select-wrap{position:relative}
+.loc-clear-btn{position:absolute;right:36px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:var(--text3);cursor:pointer;padding:0;line-height:1}
+
+/* SETTINGS */
 .settings-section{margin-bottom:20px}
 .settings-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-/* 장소 탭 관리 */
-.loc-manage-item{background:var(--bg2);border-radius:var(--radius-sm);padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
-.loc-manage-info{flex:1;min-width:0}
-.loc-manage-name{font-size:13px;font-weight:600;color:var(--text)}
-.loc-manage-desc{font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.loc-manage-btns{display:flex;gap:5px;flex-shrink:0;margin-left:8px}
-.loc-manage-btn{border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:10px;color:var(--text2);background:var(--card);cursor:pointer;font-family:inherit}
-.loc-manage-btn.del{border-color:#fca5a5;color:var(--urgent);background:#fff8f8}
-@media(prefers-color-scheme:dark){.loc-manage-btn.del{background:#2e1a1a}}
-.add-loc-btn{width:100%;padding:10px;border-radius:var(--radius-sm);border:1.5px dashed var(--border);background:transparent;font-size:12px;color:var(--text3);cursor:pointer;font-family:inherit;margin-top:4px}
-/* 장소 편집 폼 */
-.loc-edit-form{background:var(--bg2);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px}
-.loc-edit-form-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px}
-/* 데이터 */
+.manage-item{background:var(--bg2);border-radius:var(--radius-sm);padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.manage-info{flex:1;min-width:0}
+.manage-name{font-size:13px;font-weight:600;color:var(--text)}
+.manage-desc{font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.manage-btns{display:flex;gap:5px;flex-shrink:0;margin-left:8px}
+.manage-btn{border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:10px;color:var(--text2);background:var(--card);cursor:pointer;font-family:inherit}
+.manage-btn.del{border-color:#fca5a5;color:var(--urgent);background:#fff8f8}
+@media(prefers-color-scheme:dark){.manage-btn.del{background:#2e1a1a}}
+.add-manage-btn{width:100%;padding:10px;border-radius:var(--radius-sm);border:1.5px dashed var(--border);background:transparent;font-size:12px;color:var(--text3);cursor:pointer;font-family:inherit;margin-top:4px}
+.edit-form-box{background:var(--bg2);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;margin-top:8px}
+.edit-form-box-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px}
+
+/* DATA */
 .data-box{background:var(--bg2);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px}
 .data-box-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
 .data-box-desc{font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5}
 .import-textarea{width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:11px;font-family:monospace;height:80px;resize:none;margin-bottom:8px}
 .import-textarea:focus{outline:none;border-color:var(--green)}
+
 /* ETC */
 .empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
 .empty-icon{font-size:48px;margin-bottom:12px}
 .empty-text{font-size:14px}
+.next-water-preview{font-size:12px;color:var(--text2);background:var(--green-light);padding:8px 12px;border-radius:8px;margin-top:8px}
+.next-water-preview span{color:var(--green);font-weight:600}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#2d2a25;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:500;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .divider{height:1px;background:var(--border);margin:12px 0}
@@ -239,6 +272,7 @@ select option{background:var(--card)}
 </head>
 <body>
 <div class="app">
+  <!-- HEADER -->
   <div class="header">
     <div class="header-top">
       <div class="app-title">🌿 식물 물주기</div>
@@ -252,31 +286,54 @@ select option{background:var(--card)}
       <span class="weather-emoji" id="weatherEmoji">🌤</span>
       <span id="weatherData" class="weather-loading">날씨 불러오는 중…</span>
     </div>
+
+    <!-- 1. 요약 카드: 긴급/오늘/3일이내 -->
     <div class="summary-row">
-      <div class="summary-card urgent" onclick="filterStatus('urgent')"><div class="summary-num" id="numUrgent">0</div><div class="summary-label">물주기 지남</div></div>
-      <div class="summary-card today" onclick="filterStatus('today')"><div class="summary-num" id="numToday">0</div><div class="summary-label">오늘 예정</div></div>
-      <div class="summary-card total" onclick="filterStatus('all')"><div class="summary-num" id="numTotal">0</div><div class="summary-label">등록 식물</div></div>
+      <div class="summary-card s-urgent" onclick="setStatFilter('urgent')">
+        <div class="summary-num" id="numUrgent">0</div>
+        <div class="summary-label">Emergency</div>
+      </div>
+      <div class="summary-card s-today" onclick="setStatFilter('today')">
+        <div class="summary-num" id="numToday">0</div>
+        <div class="summary-label">Today</div>
+      </div>
+      <div class="summary-card s-upcoming" onclick="setStatFilter('upcoming')">
+        <div class="summary-num" id="numUpcoming">0</div>
+        <div class="summary-label">Upcoming</div>
+      </div>
     </div>
-    <div class="tabs-row" id="tabsRow">
-      <button class="tab-btn active" id="locTab-all" onclick="setLocFilter('all',this)">전체</button>
-      <div class="filter-divider"></div>
-      <button class="tab-btn" id="tabStat-all" onclick="setStatFilter('all')">전체</button>
+
+    <!-- 2. 필터: 상태만 (장소 탭 제거) -->
+    <div class="filter-row" id="filterRow">
+      <button class="tab-btn active" id="tabStat-all" onclick="setStatFilter('all')">전체</button>
       <button class="tab-btn" id="tabStat-urgent" onclick="setStatFilter('urgent')">🚨 긴급</button>
       <button class="tab-btn" id="tabStat-today" onclick="setStatFilter('today')">오늘</button>
       <button class="tab-btn" id="tabStat-upcoming" onclick="setStatFilter('upcoming')">예정</button>
       <button class="tab-btn" id="tabStat-ok" onclick="setStatFilter('ok')">양호</button>
-    </div>
-    <div class="sort-row">
-      <span class="sort-label">정렬</span>
+      <div class="filter-divider"></div>
       <button class="sort-btn active" id="sortBtn-status" onclick="setSortMode('status',this)">물주기순</button>
       <button class="sort-btn" id="sortBtn-alpha" onclick="setSortMode('alpha',this)">가나다순</button>
     </div>
   </div>
+
+  <!-- 3. 검색 바 -->
+  <div class="search-bar" id="searchBar">
+    <div class="search-inner">
+      <span style="font-size:16px;color:var(--text3)">🔍</span>
+      <input class="search-input" id="searchInput" placeholder="식물 이름 또는 장소로 검색…" oninput="renderPlants()">
+      <button class="search-clear" onclick="clearSearch()">✕</button>
+    </div>
+  </div>
+
   <div class="plant-list" id="plantList"></div>
-  <div style="height:80px"></div>
+  <div style="height:100px"></div>
 </div>
 
-<button class="fab" onclick="openAddModal()">+</button>
+<!-- FAB: 검색 + 추가 -->
+<div class="fab-area">
+  <button class="fab" onclick="openAddModal()">+</button>
+  <button class="fab-search" id="fabSearch" onclick="toggleSearch()">🔍</button>
+</div>
 
 <!-- Detail Modal -->
 <div class="modal-overlay" id="detailModal" onclick="handleOverlayClick(event,'detailModal')">
@@ -294,28 +351,7 @@ select option{background:var(--card)}
     </div>
     <div class="care-section">
       <div class="care-section-title">관리제 기록</div>
-      <div class="care-grid">
-        <div class="care-item care-item-disease">
-          <div class="care-item-header"><span class="care-item-icon">🍄</span><span class="care-item-label">병해관리제</span></div>
-          <div class="care-item-value" id="dm-disease">기록 없음</div>
-          <button class="care-record-btn crb-disease" onclick="recordCare('disease')">오늘 투여</button>
-        </div>
-        <div class="care-item care-item-pest">
-          <div class="care-item-header"><span class="care-item-icon">🐛</span><span class="care-item-label">해충관리제</span></div>
-          <div class="care-item-value" id="dm-pest">기록 없음</div>
-          <button class="care-record-btn crb-pest" onclick="recordCare('pest')">오늘 투여</button>
-        </div>
-        <div class="care-item care-item-nutri">
-          <div class="care-item-header"><span class="care-item-icon">🍼</span><span class="care-item-label">영양제</span></div>
-          <div class="care-item-value" id="dm-nutri">기록 없음</div>
-          <button class="care-record-btn crb-nutri" onclick="recordCare('nutri')">오늘 투여</button>
-        </div>
-        <div class="care-item care-item-pesticide">
-          <div class="care-item-header"><span class="care-item-icon">🧪</span><span class="care-item-label">농약</span></div>
-          <div class="care-item-value" id="dm-pesticide">기록 없음</div>
-          <button class="care-record-btn crb-pesticide" onclick="recordCare('pesticide')">오늘 투여</button>
-        </div>
-      </div>
+      <div class="care-grid" id="dm-care-grid"></div>
     </div>
     <div class="memo-box" id="dm-memo-wrap"><div class="memo-label">💡 메모</div><div id="dm-memo"></div></div>
     <div class="history-section"><div class="history-title">최근 물주기 기록</div><div class="history-list" id="dm-history"></div></div>
@@ -374,12 +410,22 @@ select option{background:var(--card)}
     <div class="modal-handle"></div>
     <div style="font-size:17px;font-weight:700;margin-bottom:20px;color:var(--text)">⚙️ 설정</div>
 
-    <!-- 장소 탭 관리 -->
+    <!-- 장소 탭 -->
     <div class="settings-section">
       <div class="settings-section-title">장소 탭</div>
       <div id="locManageList"></div>
-      <button class="add-loc-btn" onclick="openLocAddForm()">＋ 새 장소 추가</button>
-      <div id="locEditFormWrap" style="margin-top:10px"></div>
+      <button class="add-manage-btn" onclick="openLocAddForm()">＋ 새 장소 추가</button>
+      <div id="locEditFormWrap"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 4. 관리제 탭 -->
+    <div class="settings-section">
+      <div class="settings-section-title">관리제 탭</div>
+      <div id="careManageList"></div>
+      <button class="add-manage-btn" onclick="openCareAddForm()">＋ 새 관리제 추가</button>
+      <div id="careEditFormWrap"></div>
     </div>
 
     <div class="divider"></div>
@@ -409,15 +455,28 @@ select option{background:var(--card)}
 <script>
 const STORAGE_KEY='plant_tracker_v1';
 const LOCS_KEY='plant_locs_v2';
+const CARES_KEY='plant_cares_v1';
 const DAYS_KO=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
-const ICONS=['🌵','🌸','🌱','🌿','🪴','🍃','🌺','🌳','🌾','🍀','🪷','🌻','🍁','🎋','🪸'];
 
-// 장소 데이터 구조: [{id, label, desc}]
+// 7. 아이콘 2페이지
+const ICONS_P1=['🌸','🌼','🌺','🌷','🌹','💐','🪻','🪷','🌵','🌲','🌳','🌱','🌿','☘️','🪴'];
+const ICONS_P2=['🍁','✨','🌈','🪸','🩷','❤️','🧡','💛','💚','🩵','💙','💜','🤍','🤎','🖤'];
+const ICONS_ALL=[...ICONS_P1,...ICONS_P2];
+
+// 기본 장소
 const DEFAULT_LOCS=[
   {id:'se',label:'🌤 남동향 베란다',desc:'직사광선 3-4h + 밝은 간접광 / 21-26°C / 통풍 양호'},
   {id:'e', label:'🌿 동향 거실창가',desc:'밝은 간접광 / 22-25°C / 통풍 양호'}
 ];
-// 최신 데이터 (2026-03-24 기준)
+
+// 4. 관리제 기본 데이터 {id, icon, label, colorClass, btnClass}
+const DEFAULT_CARES=[
+  {id:'disease', icon:'🍄', label:'병해관리제', colorClass:'cb-disease', itemClass:'care-item-disease', btnClass:'crb-disease'},
+  {id:'pest',    icon:'🐛', label:'해충관리제', colorClass:'cb-pest',    itemClass:'care-item-pest',    btnClass:'crb-pest'},
+  {id:'nutri',   icon:'🍼', label:'영양제',     colorClass:'cb-nutri',   itemClass:'care-item-nutri',   btnClass:'crb-nutri'},
+  {id:'pesticide',icon:'🧪',label:'농약',       colorClass:'cb-pesticide',itemClass:'care-item-pesticide',btnClass:'crb-pesticide'},
+];
+
 const DEFAULT_PLANTS=[
   {id:1, icon:'🌵',name:'청산호',             type:'다육식물',interval:28,lastWater:'2026-03-04',location:'se',memo:'흙 완전히 말랐을 때만',history:[]},
   {id:2, icon:'🍁',name:'벤쿠버제라늄',        type:'화초',   interval:8, lastWater:'2026-03-18',location:'se',memo:'겉흙 1-2cm 말랐을 때',history:['2026-03-18'],lastDisease:'2026-03-11',lastPest:'2026-03-18'},
@@ -440,7 +499,9 @@ const DEFAULT_PLANTS=[
   {id:20,icon:'🌱',name:'스킨답서스',          type:'관엽식물',interval:10,lastWater:'2026-03-17',location:'e', memo:'겉흙 완전히 마르면 물주기',history:[]}
 ];
 
-let plants=[], locs=[], locFilter='all', statFilter='all', sortMode='status', activeDetailId=null, snoozeSelectedDays=2;
+let plants=[], locs=[], cares=[];
+let statFilter='all', sortMode='status', searchQuery='', activeDetailId=null, snoozeSelectedDays=2;
+let iconPage=0; // 현재 아이콘 페이지
 
 // ── 유틸 ────────────────────────────────────────────
 function today(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
@@ -448,8 +509,9 @@ function parseDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-
 function addDays(s,n){const d=parseDate(s);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
 function diffDays(a,b){return Math.round((parseDate(a)-parseDate(b))/86400000)}
 function formatDate(s){if(!s)return'-';const d=parseDate(s);return`${d.getMonth()+1}/${d.getDate()}`}
-function getLocLabel(locId){const l=locs.find(x=>x.id===locId);return l?l.label:locId}
-function getLocDesc(locId){const l=locs.find(x=>x.id===locId);return l?l.desc:''}
+function getLocLabel(locId){if(!locId)return'장소 없음';const l=locs.find(x=>x.id===locId);return l?l.label:'장소 없음'}
+function getLocDesc(locId){if(!locId)return'';const l=locs.find(x=>x.id===locId);return l?l.desc:''}
+function getCareKey(careId){return'last_'+careId}
 
 // ── 상태 ────────────────────────────────────────────
 function getStatus(p){
@@ -473,10 +535,12 @@ async function loadData(){
   catch(e){plants=JSON.parse(JSON.stringify(DEFAULT_PLANTS))}
   try{const r=localStorage.getItem(LOCS_KEY);locs=r?JSON.parse(r):JSON.parse(JSON.stringify(DEFAULT_LOCS))}
   catch(e){locs=JSON.parse(JSON.stringify(DEFAULT_LOCS))}
-  if(!plants.length)await savePlants();
+  try{const r=localStorage.getItem(CARES_KEY);cares=r?JSON.parse(r):JSON.parse(JSON.stringify(DEFAULT_CARES))}
+  catch(e){cares=JSON.parse(JSON.stringify(DEFAULT_CARES))}
 }
 async function savePlants(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(plants))}catch(e){}}
 async function saveLocs(){try{localStorage.setItem(LOCS_KEY,JSON.stringify(locs))}catch(e){}}
+async function saveCares(){try{localStorage.setItem(CARES_KEY,JSON.stringify(cares))}catch(e){}}
 
 // ── 헤더/날씨 ────────────────────────────────────────
 function updateHeader(){
@@ -498,71 +562,73 @@ function wCode(c){
   if(c<=67)return'🌧';if(c<=77)return'❄️';if(c<=82)return'🌦';return'⛈';
 }
 
-// ── 탭 렌더 ─────────────────────────────────────────
-function renderLocTabs(){
-  const row=document.getElementById('tabsRow');
-  // 장소 탭 버튼들 제거 후 재생성 (전체 버튼 다음에)
-  row.querySelectorAll('.loc-tab-btn').forEach(b=>b.remove());
-  const divider=row.querySelector('.filter-divider');
-  locs.forEach(loc=>{
-    const btn=document.createElement('button');
-    btn.className='tab-btn loc-tab-btn'+(locFilter===loc.id?' active':'');
-    btn.textContent=loc.label;
-    btn.onclick=()=>setLocFilter(loc.id,btn);
-    row.insertBefore(btn,divider);
+// ── 요약 업데이트 ────────────────────────────────────
+function updateSummary(){
+  let u=0,t=0,up=0;
+  plants.forEach(p=>{
+    const s=getStatus(p);
+    if(s==='urgent')u++;
+    if(s==='today')t++;
+    if(s==='upcoming')up++;
   });
-  document.getElementById('locTab-all').classList.toggle('active',locFilter==='all');
+  document.getElementById('numUrgent').textContent=u;
+  document.getElementById('numToday').textContent=t;
+  document.getElementById('numUpcoming').textContent=up;
+}
+
+// ── 3. 검색 ─────────────────────────────────────────
+function toggleSearch(){
+  const bar=document.getElementById('searchBar');
+  const btn=document.getElementById('fabSearch');
+  const open=!bar.classList.contains('open');
+  bar.classList.toggle('open',open);
+  btn.classList.toggle('active',open);
+  if(open)setTimeout(()=>document.getElementById('searchInput').focus(),100);
+  else{document.getElementById('searchInput').value='';searchQuery='';renderPlants();}
+}
+function clearSearch(){
+  document.getElementById('searchInput').value='';searchQuery='';renderPlants();
+  document.getElementById('searchInput').focus();
 }
 
 // ── 렌더링 ───────────────────────────────────────────
-function updateSummary(){
-  let u=0,t=0;
-  plants.forEach(p=>{const s=getStatus(p);if(s==='urgent')u++;if(s==='today')t++;});
-  document.getElementById('numUrgent').textContent=u;
-  document.getElementById('numToday').textContent=t;
-  document.getElementById('numTotal').textContent=plants.length;
-}
-
 function renderPlants(){
   updateSummary();
+  searchQuery=document.getElementById('searchInput').value.trim().toLowerCase();
   const list=document.getElementById('plantList');list.innerHTML='';
+
   let filtered=plants.filter(p=>{
-    if(locFilter!=='all'&&p.location!==locFilter)return false;
     const s=getStatus(p);
     if(statFilter==='urgent'&&s!=='urgent')return false;
     if(statFilter==='today'&&s!=='today')return false;
     if(statFilter==='upcoming'&&s!=='upcoming'&&s!=='snooze')return false;
     if(statFilter==='ok'&&s!=='ok')return false;
+    // 3. 검색 필터 (이름 또는 장소)
+    if(searchQuery){
+      const nameMatch=p.name.toLowerCase().includes(searchQuery);
+      const locLabel=getLocLabel(p.location).toLowerCase();
+      const locMatch=locLabel.includes(searchQuery);
+      if(!nameMatch&&!locMatch)return false;
+    }
     return true;
   });
+
   filtered.sort((a,b)=>{
-    if(sortMode==='alpha'){
-      return a.name.localeCompare(b.name,'ko');
-    }
-    // 물주기순 (기본): 상태 우선, 같은 상태면 D-day 가까운 순, 같으면 가나다순
+    if(sortMode==='alpha')return a.name.localeCompare(b.name,'ko');
     const[oa,da]=getSortKey(a),[ob,db]=getSortKey(b);
     if(oa!==ob)return oa-ob;
     if(da!==db)return da-db;
     return a.name.localeCompare(b.name,'ko');
   });
-  if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">🌵</div><div class="empty-text">해당하는 식물이 없어요</div></div>';return}
 
-  if(locFilter==='all'){
-    // 전체탭: 섹션 헤더 없이 D-day 순 나열, 카드에 장소 표시
-    filtered.forEach(p=>list.appendChild(buildCard(p,true)));
-  } else {
-    // 장소탭: 섹션 헤더 + 해당 장소 식물
-    const loc=locs.find(l=>l.id===locFilter);
-    if(loc){
-      const hdr=document.createElement('div');hdr.className='section-header';
-      hdr.innerHTML=`<div class="section-header-info"><div class="section-title">${loc.label}</div><div class="section-desc">${loc.desc}</div></div><button class="section-edit-btn" onclick="openLocEditFormInline('${loc.id}',event)">✏️ 수정</button>`;
-      list.appendChild(hdr);
-    }
-    filtered.forEach(p=>list.appendChild(buildCard(p,false)));
+  if(!filtered.length){
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">🌵</div><div class="empty-text">해당하는 식물이 없어요</div></div>';
+    return;
   }
+  filtered.forEach(p=>list.appendChild(buildCard(p)));
 }
 
-function buildCard(p, showLoc){
+function buildCard(p){
   const status=getStatus(p),next=addDays(p.lastWater,p.interval);
   const elapsed=diffDays(today(),p.lastWater),progress=Math.min(Math.round(elapsed/p.interval*100),100);
   const diff=diffDays(next,today()),label=getStatusLabel(status,p);
@@ -570,18 +636,15 @@ function buildCard(p, showLoc){
   const badgeClass={urgent:'badge-urgent',today:'badge-today',snooze:'badge-snooze',ok:'badge-ok',upcoming:'badge-upcoming'}[status];
   const nextStr=status==='snooze'?`미루기 중 (${formatDate(p.snoozeUntil)}까지)`:diff===0?'오늘':diff<0?`${-diff}일 지남`:`${diff}일 후`;
   const memoHtml=p.memo?`<div class="plant-memo">💡 ${p.memo}</div>`:'';
-  const locHtml=showLoc?`<div class="plant-loc-tag">📍 ${getLocLabel(p.location)}</div>`:'';
+  const locHtml=p.location?`<div class="plant-loc-tag">📍 ${getLocLabel(p.location)}</div>`:'';
 
-  const dD=p.lastDisease?diffDays(today(),p.lastDisease):null;
-  const pD=p.lastPest?diffDays(today(),p.lastPest):null;
-  const nD=p.lastNutri?diffDays(today(),p.lastNutri):null;
-  const psD=p.lastPesticide?diffDays(today(),p.lastPesticide):null;
-  const careBadges=[
-    dD!==null?`<span class="care-badge cb-disease">🍄 D+${dD}</span>`:'',
-    pD!==null?`<span class="care-badge cb-pest">🐛 D+${pD}</span>`:'',
-    nD!==null?`<span class="care-badge cb-nutri">🍼 D+${nD}</span>`:'',
-    psD!==null?`<span class="care-badge cb-pesticide">🧪 D+${psD}</span>`:''
-  ].join('');
+  // 관리제 배지 동적 생성
+  const careBadges=cares.map(c=>{
+    const key=getCareKey(c.id);const val=p[key];
+    if(!val)return'';
+    const d=diffDays(today(),val);
+    return`<span class="care-badge ${c.colorClass}">${c.icon} D+${d}</span>`;
+  }).join('');
 
   const card=document.createElement('div');card.className=`plant-card ${status}`;
   card.onclick=()=>openDetail(p.id);
@@ -596,7 +659,7 @@ function openDetail(id){
   const status=getStatus(p),next=addDays(p.lastWater,p.interval),diff=diffDays(next,today());
   document.getElementById('dm-icon').textContent=p.icon;
   document.getElementById('dm-name').textContent=p.name;
-  document.getElementById('dm-sub').textContent=`${p.type} · ${getLocLabel(p.location)}`;
+  document.getElementById('dm-sub').textContent=`${p.type}${p.location?' · '+getLocLabel(p.location):''}`;
   document.getElementById('dm-interval').textContent=`${p.interval}일마다`;
   document.getElementById('dm-last').textContent=p.lastWater;
   document.getElementById('dm-next').textContent=next;
@@ -606,18 +669,26 @@ function openDetail(id){
   if(p.memo){mw.style.display='';document.getElementById('dm-memo').textContent=p.memo}else mw.style.display='none';
   const entries=(p.history||[]).slice(-6).reverse();
   document.getElementById('dm-history').innerHTML=entries.length?entries.map(d=>`<span class="history-chip">💧 ${d}</span>`).join(''):'<span style="font-size:12px;color:var(--text3)">기록 없음</span>';
-  // 관리제
-  const fmt=(d,v)=>v?`${v} (D+${diffDays(today(),v)})`:'기록 없음';
-  document.getElementById('dm-disease').textContent=fmt('disease',p.lastDisease);
-  document.getElementById('dm-pest').textContent=fmt('pest',p.lastPest);
-  document.getElementById('dm-nutri').textContent=fmt('nutri',p.lastNutri);
-  document.getElementById('dm-pesticide').textContent=fmt('pesticide',p.lastPesticide);
+
+  // 관리제 동적 렌더링
+  const grid=document.getElementById('dm-care-grid');
+  grid.innerHTML=cares.map(c=>{
+    const key=getCareKey(c.id);const val=p[key];
+    const txt=val?`${val} (D+${diffDays(today(),val)})`:'기록 없음';
+    return`<div class="care-item ${c.itemClass}">
+      <div class="care-item-header"><span class="care-item-icon">${c.icon}</span><span class="care-item-label">${c.label}</span></div>
+      <div class="care-item-value" id="dm-care-${c.id}">${txt}</div>
+      <button class="care-record-btn ${c.btnClass}" onclick="recordCare('${c.id}')">오늘 투여</button>
+    </div>`;
+  }).join('');
+
   document.getElementById('snoozePicker').style.display='none';
   snoozeSelectedDays=2;
   document.querySelectorAll('.snooze-opt').forEach(b=>b.classList.toggle('selected',parseInt(b.textContent)===2));
   document.getElementById('snoozeCustom').value=2;
   openModal('detailModal');
 }
+
 async function waterPlant(){
   const p=plants.find(x=>x.id===activeDetailId);if(!p)return;
   const t=today();p.history=p.history||[];
@@ -636,150 +707,244 @@ async function deletePlant(){
   if(!confirm('정말 삭제할까요?'))return;
   plants=plants.filter(x=>x.id!==activeDetailId);await savePlants();closeModal('detailModal');renderPlants();showToast('🗑️ 삭제되었습니다');
 }
-async function recordCare(type){
+async function recordCare(careId){
   const p=plants.find(x=>x.id===activeDetailId);if(!p)return;
-  const t=today();
-  const labels={disease:'🍄 병해관리제',pest:'🐛 해충관리제',nutri:'🍼 영양제',pesticide:'🧪 농약'};
-  if(type==='disease')p.lastDisease=t;
-  else if(type==='pest')p.lastPest=t;
-  else if(type==='nutri')p.lastNutri=t;
-  else p.lastPesticide=t;
+  const c=cares.find(x=>x.id===careId);if(!c)return;
+  const t=today();const key=getCareKey(careId);p[key]=t;
   await savePlants();
-  document.getElementById(`dm-${type}`).textContent=`${t} (D+0)`;
-  renderPlants();showToast(`${labels[type]} 투여 기록 완료!`);
+  const el=document.getElementById(`dm-care-${careId}`);
+  if(el)el.textContent=`${t} (D+0)`;
+  renderPlants();showToast(`${c.icon} ${c.label} 투여 기록 완료!`);
+}
+
+// ── 7. 아이콘 피커 ───────────────────────────────────
+function buildIconPicker(selectedIcon){
+  iconPage=0;
+  const p1=ICONS_P1.map(ic=>`<div class="icon-opt${ic===selectedIcon?' selected':''}" onclick="selectIcon(this,'${ic}')">${ic}</div>`).join('');
+  const p2=ICONS_P2.map(ic=>`<div class="icon-opt${ic===selectedIcon?' selected':''}" onclick="selectIcon(this,'${ic}')">${ic}</div>`).join('');
+  return`<div class="icon-picker-wrap">
+    <div class="icon-pages" id="iconPages" style="transform:translateX(0%)">
+      <div class="icon-page">${p1}</div>
+      <div class="icon-page">${p2}</div>
+    </div>
+    <div class="icon-page-dots">
+      <div class="icon-dot active" id="iconDot0" onclick="setIconPage(0)"></div>
+      <div class="icon-dot" id="iconDot1" onclick="setIconPage(1)"></div>
+    </div>
+  </div>
+  <input type="hidden" id="f-icon" value="${selectedIcon||ICONS_P1[0]}">`;
+}
+function setIconPage(n){
+  iconPage=n;
+  document.getElementById('iconPages').style.transform=`translateX(-${n*100}%)`;
+  document.getElementById('iconDot0').classList.toggle('active',n===0);
+  document.getElementById('iconDot1').classList.toggle('active',n===1);
+}
+function selectIcon(el,icon){
+  document.querySelectorAll('.icon-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('f-icon').value=icon;
 }
 
 // ── 식물 폼 ──────────────────────────────────────────
 function buildPlantForm(p){
-  const d=p||{icon:'🌱',name:'',type:'',interval:7,lastWater:today(),location:locs[0]?.id||'se',memo:'',lastDisease:'',lastPest:'',lastNutri:'',lastPesticide:''};
-  const locOptions=locs.map(l=>`<option value="${l.id}"${d.location===l.id?' selected':''}>${l.label}</option>`).join('');
-  return`<div class="form-section"><label class="form-label">아이콘</label><div class="icon-grid">${ICONS.map(ic=>`<div class="icon-opt${ic===d.icon?' selected':''}" onclick="selectIcon(this,'${ic}')">${ic}</div>`).join('')}</div><input type="hidden" id="f-icon" value="${d.icon}"></div>
-<div class="form-row"><div class="form-section"><label class="form-label">이름 *</label><input class="form-input" id="f-name" value="${d.name}" placeholder="식물 이름"></div><div class="form-section"><label class="form-label">종류</label><input class="form-input" id="f-type" value="${d.type}" placeholder="관엽식물"></div></div>
+  const d=p||{icon:ICONS_P1[0],name:'',type:'',interval:7,lastWater:today(),location:locs[0]?.id||'',memo:''};
+  // 6. 장소 옵션 + X(없음)
+  const locOptions=`<option value=""${!d.location?' selected':''}>— 장소 없음 —</option>`
+    +locs.map(l=>`<option value="${l.id}"${d.location===l.id?' selected':''}>${l.label}</option>`).join('');
+  // 관리제 날짜 필드 동적 생성
+  const careFields=cares.map((c,i)=>{
+    const key=getCareKey(c.id);const val=d[key]||'';
+    const isOdd=i%2===0;
+    if(isOdd){
+      const next=cares[i+1];
+      const nextKey=next?getCareKey(next.id):'';const nextVal=next?d[nextKey]||'':'';
+      if(next){
+        return`<div class="form-row">
+          <div class="form-section"><label class="form-label">${c.icon} ${c.label} 투여일</label><input class="form-input" type="date" id="f-care-${c.id}" value="${val}"></div>
+          <div class="form-section"><label class="form-label">${next.icon} ${next.label} 투여일</label><input class="form-input" type="date" id="f-care-${next.id}" value="${nextVal}"></div>
+        </div>`;
+      }else{
+        return`<div class="form-section"><label class="form-label">${c.icon} ${c.label} 투여일</label><input class="form-input" type="date" id="f-care-${c.id}" value="${val}"></div>`;
+      }
+    }
+    return''; // 짝수는 위에서 처리
+  }).filter(Boolean).join('');
+
+  return`<div class="form-section"><label class="form-label">아이콘</label>${buildIconPicker(d.icon)}</div>
+<div class="form-row"><div class="form-section"><label class="form-label">이름 *</label><input class="form-input" id="f-name" value="${d.name}" placeholder="식물 이름"></div><div class="form-section"><label class="form-label">종류</label><input class="form-input" id="f-type" value="${d.type||''}" placeholder="관엽식물"></div></div>
 <div class="form-row"><div class="form-section"><label class="form-label">물주기 간격 (일)</label><input class="form-input" type="number" id="f-interval" value="${d.interval}" min="1" oninput="updateNextPreview()"></div><div class="form-section"><label class="form-label">마지막 물주기</label><input class="form-input" type="date" id="f-lastwater" value="${d.lastWater}" oninput="updateNextPreview()"></div></div>
 <div class="form-section"><label class="form-label">장소</label><select class="form-select" id="f-location">${locOptions}</select></div>
-<div class="form-row"><div class="form-section"><label class="form-label">🍄 병해관리제 투여일</label><input class="form-input" type="date" id="f-disease" value="${d.lastDisease||''}"></div><div class="form-section"><label class="form-label">🐛 해충관리제 투여일</label><input class="form-input" type="date" id="f-pest" value="${d.lastPest||''}"></div></div>
-<div class="form-section"><label class="form-label">🍼 영양제 투여일</label><input class="form-input" type="date" id="f-nutri" value="${d.lastNutri||''}"></div>
-<div class="form-section"><label class="form-label">🧪 농약 투여일</label><input class="form-input" type="date" id="f-pesticide" value="${d.lastPesticide||''}"></div>
+${careFields}
 <div class="form-section"><label class="form-label">메모</label><textarea class="form-textarea" id="f-memo" placeholder="물주기 조건 등">${d.memo||''}</textarea></div>
 <div class="next-water-preview">다음 물주기 예정: <span id="nextPreviewDate">${addDays(d.lastWater,d.interval)}</span></div>`;
 }
-function selectIcon(el,icon){document.querySelectorAll('.icon-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');document.getElementById('f-icon').value=icon}
+
 function updateNextPreview(){const lw=document.getElementById('f-lastwater')?.value,iv=parseInt(document.getElementById('f-interval')?.value);if(lw&&iv)document.getElementById('nextPreviewDate').textContent=addDays(lw,iv)}
+
+function getFormData(){
+  const obj={
+    icon:document.getElementById('f-icon').value||ICONS_P1[0],
+    name:document.getElementById('f-name').value.trim(),
+    type:document.getElementById('f-type').value.trim(),
+    interval:parseInt(document.getElementById('f-interval').value)||7,
+    lastWater:document.getElementById('f-lastwater').value||today(),
+    location:document.getElementById('f-location').value||'',
+    memo:document.getElementById('f-memo').value.trim(),
+  };
+  cares.forEach(c=>{const el=document.getElementById(`f-care-${c.id}`);obj[getCareKey(c.id)]=el?el.value||'':''});
+  return obj;
+}
+
 function openEditFromDetail(){const p=plants.find(x=>x.id===activeDetailId);if(!p)return;closeModal('detailModal');setTimeout(()=>{document.getElementById('editForm').innerHTML=buildPlantForm(p);openModal('editModal')},200)}
+
 let _editSaving=false;
 async function saveEdit(){
   if(_editSaving)return;_editSaving=true;
   try{
     const p=plants.find(x=>x.id===activeDetailId);if(!p)return;
-    const name=document.getElementById('f-name').value.trim();if(!name){alert('이름을 입력해주세요');return}
-    p.icon=document.getElementById('f-icon').value;p.name=name;p.type=document.getElementById('f-type').value.trim();
-    p.interval=parseInt(document.getElementById('f-interval').value)||7;p.lastWater=document.getElementById('f-lastwater').value;
-    p.location=document.getElementById('f-location').value;p.memo=document.getElementById('f-memo').value.trim();
-    p.lastDisease=document.getElementById('f-disease').value||'';
-    p.lastPest=document.getElementById('f-pest').value||'';
-    p.lastNutri=document.getElementById('f-nutri').value||'';
-    p.lastPesticide=document.getElementById('f-pesticide').value||'';
+    const f=getFormData();if(!f.name){alert('이름을 입력해주세요');return}
+    Object.assign(p,f);
     await savePlants();closeModal('editModal');renderPlants();showToast('✅ 수정 완료!');
   }finally{setTimeout(()=>{_editSaving=false},1000)}
 }
+
 function openAddModal(){activeDetailId=null;document.getElementById('addForm').innerHTML=buildPlantForm(null);openModal('addModal')}
 let _saving=false;
 async function saveAdd(){
   if(_saving)return;_saving=true;
   try{
-    const name=document.getElementById('f-name').value.trim();if(!name){alert('이름을 입력해주세요');return}
+    const f=getFormData();if(!f.name){alert('이름을 입력해주세요');return}
     const newId=plants.length?Math.max(...plants.map(p=>p.id))+1:1;
-    plants.push({id:newId,icon:document.getElementById('f-icon').value||'🌱',name,type:document.getElementById('f-type').value.trim(),interval:parseInt(document.getElementById('f-interval').value)||7,lastWater:document.getElementById('f-lastwater').value||today(),location:document.getElementById('f-location').value||locs[0]?.id||'se',memo:document.getElementById('f-memo').value.trim(),lastDisease:document.getElementById('f-disease')?.value||'',lastPest:document.getElementById('f-pest')?.value||'',lastNutri:document.getElementById('f-nutri')?.value||'',lastPesticide:document.getElementById('f-pesticide')?.value||'',history:[]});
+    plants.push({id:newId,...f,history:[]});
     await savePlants();closeModal('addModal');renderPlants();showToast('🌱 새 식물 추가!');
   }finally{setTimeout(()=>{_saving=false},1000)}
 }
 
-// ── 설정 / 장소 관리 ──────────────────────────────────
+// ── 설정: 장소 관리 ──────────────────────────────────
 function openSettingsModal(){
-  renderLocManageList();
+  renderLocManageList();renderCareManageList();
   document.getElementById('locEditFormWrap').innerHTML='';
+  document.getElementById('careEditFormWrap').innerHTML='';
   document.getElementById('importTextarea').value='';
   openModal('settingsModal');
 }
 function renderLocManageList(){
-  const wrap=document.getElementById('locManageList');
-  wrap.innerHTML=locs.map(loc=>`
-    <div class="loc-manage-item">
-      <div class="loc-manage-info">
-        <div class="loc-manage-name">${loc.label}</div>
-        <div class="loc-manage-desc">${loc.desc}</div>
-      </div>
-      <div class="loc-manage-btns">
-        <button class="loc-manage-btn" onclick="openLocEditFormInSettings('${loc.id}')">✏️ 수정</button>
-        <button class="loc-manage-btn del" onclick="deleteLoc('${loc.id}')">🗑️</button>
+  document.getElementById('locManageList').innerHTML=locs.map(loc=>`
+    <div class="manage-item">
+      <div class="manage-info"><div class="manage-name">${loc.label}</div><div class="manage-desc">${loc.desc}</div></div>
+      <div class="manage-btns">
+        <button class="manage-btn" onclick="openLocEditForm('${loc.id}')">✏️</button>
+        <button class="manage-btn del" onclick="deleteLoc('${loc.id}')">🗑️</button>
       </div>
     </div>`).join('');
 }
 function openLocAddForm(){
-  const wrap=document.getElementById('locEditFormWrap');
-  wrap.innerHTML=`<div class="loc-edit-form">
-    <div class="loc-edit-form-title">＋ 새 장소 추가</div>
+  document.getElementById('locEditFormWrap').innerHTML=`<div class="edit-form-box">
+    <div class="edit-form-box-title">＋ 새 장소 추가</div>
     <div class="form-section"><label class="form-label">장소명 (이모지 포함)</label><input class="form-input" id="lf-label" placeholder="예: 🌞 남향 창가"></div>
     <div class="form-section"><label class="form-label">환경 설명</label><input class="form-input" id="lf-desc" placeholder="예: 직사광선 2h / 18-22°C"></div>
-    <div class="modal-actions-2">
-      <button class="btn btn-cancel" onclick="document.getElementById('locEditFormWrap').innerHTML=''">취소</button>
-      <button class="btn btn-save" onclick="saveLocAdd()">추가</button>
-    </div>
+    <div class="modal-actions-2"><button class="btn btn-cancel" onclick="document.getElementById('locEditFormWrap').innerHTML=''">취소</button><button class="btn btn-save" onclick="saveLocAdd()">추가</button></div>
   </div>`;
 }
 async function saveLocAdd(){
   const label=document.getElementById('lf-label').value.trim();
-  const desc=document.getElementById('lf-desc').value.trim();
   if(!label){alert('장소명을 입력해주세요');return}
-  const newId='loc_'+Date.now();
-  locs.push({id:newId,label,desc});
+  locs.push({id:'loc_'+Date.now(),label,desc:document.getElementById('lf-desc').value.trim()});
   await saveLocs();document.getElementById('locEditFormWrap').innerHTML='';
-  renderLocManageList();renderLocTabs();renderPlants();showToast('📍 새 장소 추가 완료!');
+  renderLocManageList();renderPlants();showToast('📍 새 장소 추가!');
 }
-function openLocEditFormSettings(locId){
-  openLocEditFormInSettings(locId);
-}
-function openLocEditFormInSettings(locId){
+function openLocEditForm(locId){
   const loc=locs.find(l=>l.id===locId);if(!loc)return;
-  const wrap=document.getElementById('locEditFormWrap');
-  wrap.innerHTML=`<div class="loc-edit-form">
-    <div class="loc-edit-form-title">✏️ 장소 수정</div>
+  document.getElementById('locEditFormWrap').innerHTML=`<div class="edit-form-box">
+    <div class="edit-form-box-title">✏️ 장소 수정</div>
     <div class="form-section"><label class="form-label">장소명</label><input class="form-input" id="lf-label" value="${loc.label}"></div>
     <div class="form-section"><label class="form-label">환경 설명</label><input class="form-input" id="lf-desc" value="${loc.desc}"></div>
-    <div class="modal-actions-2">
-      <button class="btn btn-cancel" onclick="document.getElementById('locEditFormWrap').innerHTML=''">취소</button>
-      <button class="btn btn-save" onclick="saveLocEdit('${locId}')">저장</button>
-    </div>
+    <div class="modal-actions-2"><button class="btn btn-cancel" onclick="document.getElementById('locEditFormWrap').innerHTML=''">취소</button><button class="btn btn-save" onclick="saveLocEdit('${locId}')">저장</button></div>
   </div>`;
-  wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-// 장소탭의 ✏️ 수정 버튼 (섹션 헤더)
-function openLocEditFormInline(locId, e){
-  e.stopPropagation();
-  // 설정 모달 열고 해당 장소 편집 폼 표시
-  openSettingsModal();
-  setTimeout(()=>openLocEditFormInSettings(locId),300);
+  document.getElementById('locEditFormWrap').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 async function saveLocEdit(locId){
   const loc=locs.find(l=>l.id===locId);if(!loc)return;
   loc.label=document.getElementById('lf-label').value.trim()||loc.label;
   loc.desc=document.getElementById('lf-desc').value.trim();
   await saveLocs();document.getElementById('locEditFormWrap').innerHTML='';
-  renderLocManageList();renderLocTabs();renderPlants();showToast('✅ 장소 저장 완료!');
+  renderLocManageList();renderPlants();showToast('✅ 장소 저장!');
 }
 async function deleteLoc(locId){
-  const plantCount=plants.filter(p=>p.location===locId).length;
-  if(plantCount>0){alert(`이 장소에 식물 ${plantCount}개가 있어요.\n먼저 식물 장소를 변경한 후 삭제해주세요.`);return}
+  const cnt=plants.filter(p=>p.location===locId).length;
+  if(cnt>0){alert(`이 장소에 식물 ${cnt}개가 있어요.\n먼저 식물 장소를 변경 후 삭제해주세요.`);return}
   if(!confirm('장소를 삭제할까요?'))return;
   locs=locs.filter(l=>l.id!==locId);
-  await saveLocs();renderLocManageList();renderLocTabs();
-  if(locFilter===locId)locFilter='all';
-  renderPlants();showToast('🗑️ 장소 삭제됨');
+  await saveLocs();renderLocManageList();renderPlants();showToast('🗑️ 장소 삭제됨');
+}
+
+// ── 4. 설정: 관리제 관리 ─────────────────────────────
+const CARE_COLORS=[
+  {colorClass:'cb-disease',itemClass:'care-item-disease',btnClass:'crb-disease'},
+  {colorClass:'cb-pest',   itemClass:'care-item-pest',   btnClass:'crb-pest'},
+  {colorClass:'cb-nutri',  itemClass:'care-item-nutri',  btnClass:'crb-nutri'},
+  {colorClass:'cb-pesticide',itemClass:'care-item-pesticide',btnClass:'crb-pesticide'},
+];
+function renderCareManageList(){
+  document.getElementById('careManageList').innerHTML=cares.map((c,i)=>`
+    <div class="manage-item">
+      <div class="manage-info"><div class="manage-name">${c.icon} ${c.label}</div></div>
+      <div class="manage-btns">
+        <button class="manage-btn" onclick="openCareEditForm('${c.id}')">✏️</button>
+        <button class="manage-btn del" onclick="deleteCare('${c.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+function openCareAddForm(){
+  document.getElementById('careEditFormWrap').innerHTML=`<div class="edit-form-box">
+    <div class="edit-form-box-title">＋ 새 관리제 추가</div>
+    <div class="form-row">
+      <div class="form-section"><label class="form-label">아이콘</label><input class="form-input" id="cf-icon" placeholder="예: 💊" maxlength="2"></div>
+      <div class="form-section"><label class="form-label">이름</label><input class="form-input" id="cf-label" placeholder="예: 제충국"></div>
+    </div>
+    <div class="modal-actions-2"><button class="btn btn-cancel" onclick="document.getElementById('careEditFormWrap').innerHTML=''">취소</button><button class="btn btn-save" onclick="saveCareAdd()">추가</button></div>
+  </div>`;
+  document.getElementById('careEditFormWrap').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function saveCareAdd(){
+  const icon=document.getElementById('cf-icon').value.trim();
+  const label=document.getElementById('cf-label').value.trim();
+  if(!label){alert('이름을 입력해주세요');return}
+  const idx=cares.length%CARE_COLORS.length;
+  const colors=CARE_COLORS[idx];
+  cares.push({id:'care_'+Date.now(),icon:icon||'💊',label,...colors});
+  await saveCares();document.getElementById('careEditFormWrap').innerHTML='';
+  renderCareManageList();showToast('✅ 관리제 추가!');
+}
+function openCareEditForm(careId){
+  const c=cares.find(x=>x.id===careId);if(!c)return;
+  document.getElementById('careEditFormWrap').innerHTML=`<div class="edit-form-box">
+    <div class="edit-form-box-title">✏️ 관리제 수정 (날짜 데이터는 유지됩니다)</div>
+    <div class="form-row">
+      <div class="form-section"><label class="form-label">아이콘</label><input class="form-input" id="cf-icon" value="${c.icon}" maxlength="2"></div>
+      <div class="form-section"><label class="form-label">이름</label><input class="form-input" id="cf-label" value="${c.label}"></div>
+    </div>
+    <div class="modal-actions-2"><button class="btn btn-cancel" onclick="document.getElementById('careEditFormWrap').innerHTML=''">취소</button><button class="btn btn-save" onclick="saveCareEdit('${careId}')">저장</button></div>
+  </div>`;
+  document.getElementById('careEditFormWrap').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function saveCareEdit(careId){
+  const c=cares.find(x=>x.id===careId);if(!c)return;
+  c.icon=document.getElementById('cf-icon').value.trim()||c.icon;
+  c.label=document.getElementById('cf-label').value.trim()||c.label;
+  await saveCares();document.getElementById('careEditFormWrap').innerHTML='';
+  renderCareManageList();renderPlants();showToast('✅ 관리제 수정! 날짜 데이터는 그대로 유지됩니다.');
+}
+async function deleteCare(careId){
+  if(!confirm('관리제를 삭제할까요?\n각 식물에 기록된 투여 날짜는 함께 삭제됩니다.'))return;
+  cares=cares.filter(c=>c.id!==careId);
+  await saveCares();renderCareManageList();renderPlants();showToast('🗑️ 관리제 삭제됨');
 }
 
 // ── 내보내기/가져오기 ─────────────────────────────────
 function copyDataToClipboard(){
-  const json=JSON.stringify({plants,locs},null,2);
+  const json=JSON.stringify({plants,locs,cares},null,2);
   navigator.clipboard.writeText(json).then(()=>{
     const btn=document.getElementById('copyBtn');const orig=btn.textContent;
     btn.textContent='✅ 복사 완료!';showToast('📋 클립보드에 복사됐어요!');
@@ -794,37 +959,32 @@ async function importData(){
     if(!parsed.plants||!Array.isArray(parsed.plants))throw new Error();
     if(!confirm(`식물 ${parsed.plants.length}개를 가져옵니다.\n현재 데이터가 모두 덮어씌워집니다. 계속할까요?`))return;
     plants=parsed.plants;
-    // 구버전 locDescs 호환
     if(parsed.locs)locs=parsed.locs;
     else if(parsed.locDescs){locs=DEFAULT_LOCS.map(l=>({...l,desc:parsed.locDescs[l.id]||l.desc}))}
-    await savePlants();await saveLocs();closeModal('settingsModal');
-    renderLocTabs();renderPlants();showToast(`✅ ${plants.length}개 식물 가져오기 완료!`);
+    if(parsed.cares)cares=parsed.cares;
+    // 구버전 호환: lastDisease/lastPest/lastNutri/lastPesticide → last_disease 등으로 마이그레이션
+    plants.forEach(p=>{
+      if(p.lastDisease!==undefined&&p['last_disease']===undefined){p['last_disease']=p.lastDisease;delete p.lastDisease}
+      if(p.lastPest!==undefined&&p['last_pest']===undefined){p['last_pest']=p.lastPest;delete p.lastPest}
+      if(p.lastNutri!==undefined&&p['last_nutri']===undefined){p['last_nutri']=p.lastNutri;delete p.lastNutri}
+      if(p.lastPesticide!==undefined&&p['last_pesticide']===undefined){p['last_pesticide']=p.lastPesticide;delete p.lastPesticide}
+    });
+    await savePlants();await saveLocs();await saveCares();
+    closeModal('settingsModal');renderPlants();showToast(`✅ ${plants.length}개 식물 가져오기 완료!`);
   }catch(e){alert('올바른 형식이 아닙니다.\n내보낸 JSON 내용을 그대로 붙여넣어 주세요.')}
 }
 
-// ── 필터 ────────────────────────────────────────────
-function setSortMode(val,btn){
-  sortMode=val;
-  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderPlants();
-}
-function setLocFilter(val,btn){
-  locFilter=val;
-  document.getElementById('locTab-all').classList.toggle('active',val==='all');
-  document.querySelectorAll('.loc-tab-btn').forEach(b=>b.classList.remove('active'));
-  if(btn&&val!=='all')btn.classList.add('active');
-  renderPlants();
-}
+// ── 필터/정렬 ────────────────────────────────────────
 function setStatFilter(val){
   statFilter=val;
   ['all','urgent','today','upcoming','ok'].forEach(s=>{const el=document.getElementById(`tabStat-${s}`);if(el)el.classList.toggle('active',s===val)});
   renderPlants();
 }
-function filterStatus(val){
-  if(val==='all')setStatFilter('all');
-  else if(val==='urgent')setStatFilter('urgent');
-  else if(val==='today')setStatFilter('today');
+function setSortMode(val,btn){
+  sortMode=val;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderPlants();
 }
 
 // ── 모달 헬퍼 ────────────────────────────────────────
@@ -833,11 +993,24 @@ function closeModal(id){const el=document.getElementById(id);el.classList.remove
 function handleOverlayClick(e,id){if(e.target===document.getElementById(id))closeModal(id)}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 
+// ── 구버전 데이터 마이그레이션 ───────────────────────
+function migrateOldCareKeys(){
+  // lastDisease → last_disease 등 키 변환
+  const map={lastDisease:'last_disease',lastPest:'last_pest',lastNutri:'last_nutri',lastPesticide:'last_pesticide'};
+  let changed=false;
+  plants.forEach(p=>{
+    Object.entries(map).forEach(([oldKey,newKey])=>{
+      if(p[oldKey]!==undefined&&p[newKey]===undefined){p[newKey]=p[oldKey];delete p[oldKey];changed=true;}
+    });
+  });
+  if(changed)savePlants();
+}
+
 // ── 초기화 ───────────────────────────────────────────
 (async()=>{
   await loadData();
-  updateHeader();fetchWeather();
-  renderLocTabs();renderPlants();
+  migrateOldCareKeys();
+  updateHeader();fetchWeather();renderPlants();
   setInterval(updateHeader,60000);setInterval(fetchWeather,600000);
 })();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
