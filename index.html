@@ -71,13 +71,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .sort-btn{flex-shrink:0;padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap}
 .sort-btn.active{background:var(--snooze);border-color:var(--snooze);color:#fff}
 
-/* SEARCH BAR */
-.search-bar{display:none;padding:0 16px 12px;background:var(--card);border-bottom:1px solid var(--border)}
-.search-bar.open{display:block}
+/* SEARCH PANEL */
+.search-panel{display:none;background:var(--card);border-bottom:1px solid var(--border)}
+.search-panel.open{display:block}
 .search-inner{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:var(--radius-sm);padding:8px 12px}
 .search-input{flex:1;border:none;background:transparent;font-size:14px;color:var(--text);font-family:inherit;outline:none}
 .search-input::placeholder{color:var(--text3)}
 .search-clear{background:none;border:none;font-size:16px;cursor:pointer;color:var(--text3);padding:0;line-height:1}
+/* search filter buttons */
+.sf-btn{flex-shrink:0;padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap}
+.sf-btn.active{background:var(--green);border-color:var(--green);color:#fff}
 
 /* SECTION HEADER */
 .section-header{display:flex;align-items:flex-start;justify-content:space-between;margin:8px 0 12px;padding:10px 14px;background:var(--card);border-radius:var(--radius-sm);border-left:4px solid var(--green);box-shadow:var(--shadow)}
@@ -287,41 +290,62 @@ select option{background:var(--card)}
       <span id="weatherData" class="weather-loading">날씨 불러오는 중…</span>
     </div>
 
+    <!-- 1. 식물 수 문구 -->
+    <div id="plantCountTag" style="text-align:center;font-size:13px;color:var(--text2);background:var(--today-bg);border-radius:var(--radius-sm);padding:9px 14px;margin-bottom:14px">
+      <span id="plantCountNum" style="font-weight:700;color:var(--today)">0</span>개의 식물 친구와 함께하고 있어요 🌱
+    </div>
+
     <!-- 1. 요약 카드: 긴급/오늘/3일이내 -->
     <div class="summary-row">
-      <div class="summary-card s-urgent" onclick="setStatFilter('urgent')">
+      <div class="summary-card s-urgent" onclick="quickFilter('urgent')">
         <div class="summary-num" id="numUrgent">0</div>
         <div class="summary-label">Emergency</div>
       </div>
-      <div class="summary-card s-today" onclick="setStatFilter('today')">
+      <div class="summary-card s-today" onclick="quickFilter('today')">
         <div class="summary-num" id="numToday">0</div>
         <div class="summary-label">Today</div>
       </div>
-      <div class="summary-card s-upcoming" onclick="setStatFilter('upcoming')">
+      <div class="summary-card s-upcoming" onclick="quickFilter('upcoming')">
         <div class="summary-num" id="numUpcoming">0</div>
         <div class="summary-label">Upcoming</div>
       </div>
     </div>
 
-    <!-- 2. 필터: 상태만 (장소 탭 제거) -->
+    <!-- 2. 정렬만 -->
     <div class="filter-row" id="filterRow">
-      <button class="tab-btn active" id="tabStat-all" onclick="setStatFilter('all')">전체</button>
-      <button class="tab-btn" id="tabStat-urgent" onclick="setStatFilter('urgent')">🚨 긴급</button>
-      <button class="tab-btn" id="tabStat-today" onclick="setStatFilter('today')">오늘</button>
-      <button class="tab-btn" id="tabStat-upcoming" onclick="setStatFilter('upcoming')">예정</button>
-      <button class="tab-btn" id="tabStat-ok" onclick="setStatFilter('ok')">양호</button>
-      <div class="filter-divider"></div>
+      <span class="sort-label">정렬</span>
       <button class="sort-btn active" id="sortBtn-status" onclick="setSortMode('status',this)">물주기순</button>
       <button class="sort-btn" id="sortBtn-alpha" onclick="setSortMode('alpha',this)">가나다순</button>
+      <button class="sort-btn" id="sortBtn-reg" onclick="setSortMode('reg',this)">등록순</button>
     </div>
   </div>
 
-  <!-- 3. 검색 바 -->
-  <div class="search-bar" id="searchBar">
-    <div class="search-inner">
-      <span style="font-size:16px;color:var(--text3)">🔍</span>
-      <input class="search-input" id="searchInput" placeholder="식물 이름 또는 장소로 검색…" oninput="renderPlants()">
-      <button class="search-clear" onclick="clearSearch()">✕</button>
+  <!-- 3. 검색 패널 (접히는 방식) -->
+  <div class="search-panel" id="searchPanel">
+    <div style="padding:12px 16px 0">
+      <div class="search-inner">
+        <span style="font-size:16px;color:var(--text3)">🔍</span>
+        <input class="search-input" id="searchInput" placeholder="이름, 종류, 메모로 검색…" oninput="renderPlants()">
+        <button class="search-clear" onclick="clearSearchText()">✕</button>
+      </div>
+    </div>
+    <!-- 물주기 상태 필터 -->
+    <div style="padding:8px 16px 0">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">물주기 상태</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="sf-btn active" id="sf-all" onclick="setSearchStat('all',this)">전체</button>
+        <button class="sf-btn" id="sf-urgent" onclick="setSearchStat('urgent',this)">🚨 긴급</button>
+        <button class="sf-btn" id="sf-today" onclick="setSearchStat('today',this)">💧 오늘</button>
+        <button class="sf-btn" id="sf-upcoming" onclick="setSearchStat('upcoming',this)">🌱 예정</button>
+        <button class="sf-btn" id="sf-ok" onclick="setSearchStat('ok',this)">✅ 양호</button>
+      </div>
+    </div>
+    <!-- 장소 필터 -->
+    <div style="padding:8px 16px 12px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">장소</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="sfLocRow">
+        <button class="sf-btn active" id="sf-loc-all" onclick="setSearchLoc('',this)">전체</button>
+      </div>
     </div>
   </div>
 
@@ -329,10 +353,11 @@ select option{background:var(--card)}
   <div style="height:100px"></div>
 </div>
 
-<!-- FAB: 검색 + 추가 -->
+<!-- FAB: 검색 + 달력 + 추가 -->
 <div class="fab-area">
   <button class="fab" onclick="openAddModal()">+</button>
-  <button class="fab-search" id="fabSearch" onclick="toggleSearch()">🔍</button>
+  <button class="fab-search" id="fabCal" onclick="openCalModal()" title="달력">📅</button>
+  <button class="fab-search" id="fabSearch" onclick="toggleSearch()" title="검색">🔍</button>
 </div>
 
 <!-- Detail Modal -->
@@ -450,6 +475,15 @@ select option{background:var(--card)}
   </div>
 </div>
 
+<!-- Calendar Modal (미리보기 컨펌 후 구현 예정) -->
+<div class="modal-overlay" id="calModal" onclick="handleOverlayClick(event,'calModal')">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div id="calContent"></div>
+    <div style="margin-top:12px"><button class="btn btn-cancel btn-full" onclick="closeModal('calModal')">닫기</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -500,8 +534,10 @@ const DEFAULT_PLANTS=[
 ];
 
 let plants=[], locs=[], cares=[];
-let statFilter='all', sortMode='status', searchQuery='', activeDetailId=null, snoozeSelectedDays=2;
-let iconPage=0; // 현재 아이콘 페이지
+let sortMode='status', activeDetailId=null, snoozeSelectedDays=2;
+// 검색 패널 상태
+let searchStat='all', searchLoc='', searchText='';
+let iconPage=0;
 
 // ── 유틸 ────────────────────────────────────────────
 function today(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
@@ -574,47 +610,77 @@ function updateSummary(){
   document.getElementById('numUrgent').textContent=u;
   document.getElementById('numToday').textContent=t;
   document.getElementById('numUpcoming').textContent=up;
+  document.getElementById('plantCountNum').textContent=plants.length;
 }
 
-// ── 3. 검색 ─────────────────────────────────────────
+// ── 3. 검색 패널 ────────────────────────────────────
 function toggleSearch(){
-  const bar=document.getElementById('searchBar');
+  const panel=document.getElementById('searchPanel');
   const btn=document.getElementById('fabSearch');
-  const open=!bar.classList.contains('open');
-  bar.classList.toggle('open',open);
+  const open=!panel.classList.contains('open');
+  panel.classList.toggle('open',open);
   btn.classList.toggle('active',open);
-  if(open)setTimeout(()=>document.getElementById('searchInput').focus(),100);
-  else{document.getElementById('searchInput').value='';searchQuery='';renderPlants();}
+  if(open){
+    renderSearchLocBtns();
+    setTimeout(()=>document.getElementById('searchInput').focus(),100);
+  } else {
+    // 검색 닫으면 초기화
+    searchStat='all';searchLoc='';searchText='';
+    document.getElementById('searchInput').value='';
+    renderPlants();
+  }
 }
-function clearSearch(){
-  document.getElementById('searchInput').value='';searchQuery='';renderPlants();
-  document.getElementById('searchInput').focus();
+function renderSearchLocBtns(){
+  const row=document.getElementById('sfLocRow');
+  row.innerHTML=`<button class="sf-btn${searchLoc===''?' active':''}" onclick="setSearchLoc('',this)">전체</button>`
+    +locs.map(l=>`<button class="sf-btn${searchLoc===l.id?' active':''}" onclick="setSearchLoc('${l.id}',this)">${l.label}</button>`).join('');
+}
+function setSearchStat(val,btn){
+  searchStat=val;
+  document.querySelectorAll('[id^="sf-"]:not([id^="sf-loc"])').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlants();
+}
+function setSearchLoc(val,btn){
+  searchLoc=val;
+  document.querySelectorAll('#sfLocRow .sf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlants();
+}
+function clearSearchText(){
+  document.getElementById('searchInput').value='';searchText='';renderPlants();
 }
 
 // ── 렌더링 ───────────────────────────────────────────
 function renderPlants(){
   updateSummary();
-  searchQuery=document.getElementById('searchInput').value.trim().toLowerCase();
+  searchText=document.getElementById('searchInput').value.trim().toLowerCase();
   const list=document.getElementById('plantList');list.innerHTML='';
 
   let filtered=plants.filter(p=>{
     const s=getStatus(p);
-    if(statFilter==='urgent'&&s!=='urgent')return false;
-    if(statFilter==='today'&&s!=='today')return false;
-    if(statFilter==='upcoming'&&s!=='upcoming'&&s!=='snooze')return false;
-    if(statFilter==='ok'&&s!=='ok')return false;
-    // 3. 검색 필터 (이름 또는 장소)
-    if(searchQuery){
-      const nameMatch=p.name.toLowerCase().includes(searchQuery);
-      const locLabel=getLocLabel(p.location).toLowerCase();
-      const locMatch=locLabel.includes(searchQuery);
-      if(!nameMatch&&!locMatch)return false;
+    // 상태 필터 (검색패널)
+    if(searchStat==='urgent'&&s!=='urgent')return false;
+    if(searchStat==='today'&&s!=='today')return false;
+    if(searchStat==='upcoming'&&s!=='upcoming'&&s!=='snooze')return false;
+    if(searchStat==='ok'&&s!=='ok')return false;
+    // 장소 필터 (검색패널)
+    if(searchLoc&&p.location!==searchLoc)return false;
+    // 텍스트 검색 (이름, 종류, 메모)
+    if(searchText){
+      const hay=[p.name,p.type||'',p.memo||''].join(' ').toLowerCase();
+      if(!hay.includes(searchText))return false;
     }
     return true;
   });
 
   filtered.sort((a,b)=>{
     if(sortMode==='alpha')return a.name.localeCompare(b.name,'ko');
+    if(sortMode==='reg'){
+      // 등록순: id 높은것(최근)이 위로
+      return b.id-a.id;
+    }
+    // 물주기순
     const[oa,da]=getSortKey(a),[ob,db]=getSortKey(b);
     if(oa!==ob)return oa-ob;
     if(da!==db)return da-db;
@@ -727,18 +793,21 @@ function buildIconPicker(selectedIcon){
       <div class="icon-page">${p1}</div>
       <div class="icon-page">${p2}</div>
     </div>
-    <div class="icon-page-dots">
-      <div class="icon-dot active" id="iconDot0" onclick="setIconPage(0)"></div>
-      <div class="icon-dot" id="iconDot1" onclick="setIconPage(1)"></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin:10px 0 4px">
+      <button type="button" onclick="setIconPage(0)" id="iconPageBtn0" style="width:48px;height:48px;border-radius:50%;border:1.5px solid var(--border);background:var(--green);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">◀</button>
+      <button type="button" onclick="setIconPage(1)" id="iconPageBtn1" style="width:48px;height:48px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg2);color:var(--text2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">▶</button>
     </div>
   </div>
   <input type="hidden" id="f-icon" value="${selectedIcon||ICONS_P1[0]}">`;
 }
 function setIconPage(n){
   iconPage=n;
-  document.getElementById('iconPages').style.transform=`translateX(-${n*100}%)`;
-  document.getElementById('iconDot0').classList.toggle('active',n===0);
-  document.getElementById('iconDot1').classList.toggle('active',n===1);
+  const pages=document.getElementById('iconPages');
+  if(pages)pages.style.transform=`translateX(-${n*100}%)`;
+  const b0=document.getElementById('iconPageBtn0');
+  const b1=document.getElementById('iconPageBtn1');
+  if(b0)b0.style.background=n===0?'var(--green)':'var(--bg2)',b0.style.color=n===0?'#fff':'var(--text2)',b0.style.borderColor=n===0?'var(--green)':'var(--border)';
+  if(b1)b1.style.background=n===1?'var(--green)':'var(--bg2)',b1.style.color=n===1?'#fff':'var(--text2)',b1.style.borderColor=n===1?'var(--green)':'var(--border)';
 }
 function selectIcon(el,icon){
   document.querySelectorAll('.icon-opt').forEach(e=>e.classList.remove('selected'));
@@ -975,16 +1044,18 @@ async function importData(){
 }
 
 // ── 필터/정렬 ────────────────────────────────────────
-function setStatFilter(val){
-  statFilter=val;
-  ['all','urgent','today','upcoming','ok'].forEach(s=>{const el=document.getElementById(`tabStat-${s}`);if(el)el.classList.toggle('active',s===val)});
-  renderPlants();
-}
 function setSortMode(val,btn){
   sortMode=val;
   document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   renderPlants();
+}
+// 요약카드 클릭시 검색패널 열고 상태 필터 적용
+function quickFilter(stat){
+  const panel=document.getElementById('searchPanel');
+  if(!panel.classList.contains('open'))toggleSearch();
+  const btn=document.getElementById('sf-'+stat);
+  if(btn)setSearchStat(stat,btn);
 }
 
 // ── 모달 헬퍼 ────────────────────────────────────────
@@ -1004,6 +1075,51 @@ function migrateOldCareKeys(){
     });
   });
   if(changed)savePlants();
+}
+
+// ── 달력 (4번 미리보기 컨펌 후 full 구현) ───────────
+function openCalModal(){
+  const now=new Date();
+  const y=now.getFullYear(),m=now.getMonth();
+  const monthNames=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const firstDay=new Date(y,m,1).getDay();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const todayStr=today();
+
+  // 물 준 날짜 수집 (과거)
+  const wateredDays=new Set();
+  plants.forEach(p=>(p.history||[]).forEach(d=>{if(d.startsWith(`${y}-${String(m+1).padStart(2,'0')}`))wateredDays.add(parseInt(d.split('-')[2]))}));
+  // 앞으로 예정된 물주기
+  const upcomingDays=new Set();
+  plants.forEach(p=>{
+    const next=addDays(p.lastWater,p.interval);
+    if(next.startsWith(`${y}-${String(m+1).padStart(2,'0')}`))upcomingDays.add(parseInt(next.split('-')[2]));
+  });
+
+  let html=`<div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:16px;text-align:center">${y}년 ${monthNames[m]}</div>`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;margin-bottom:8px">`;
+  ['일','월','화','수','목','금','토'].forEach(d=>html+=`<div style="font-size:11px;color:var(--text3);font-weight:600">${d}</div>`);
+  html+=`</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">`;
+  for(let i=0;i<firstDay;i++)html+=`<div></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const isToday=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`===todayStr;
+    const isWatered=wateredDays.has(d);
+    const isUpcoming=upcomingDays.has(d)&&!isWatered;
+    let bg='transparent',color='var(--text)',border='none',fw='400';
+    if(isWatered){bg='var(--green)';color='#fff';fw='600';}
+    else if(isUpcoming){bg='var(--bg2)';color='var(--text2)';}
+    if(isToday){border='2px solid var(--today)';}
+    html+=`<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;background:${bg};color:${color};font-size:13px;font-weight:${fw};border:${border}">${d}</div>`;
+  }
+  html+=`</div>`;
+  html+=`<div style="display:flex;gap:12px;margin-top:14px;font-size:12px;color:var(--text2);justify-content:center">
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin-right:4px"></span>물 준 날</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);margin-right:4px"></span>예정일</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:2px solid var(--today);margin-right:4px"></span>오늘</span>
+  </div>`;
+
+  document.getElementById('calContent').innerHTML=html;
+  openModal('calModal');
 }
 
 // ── 초기화 ───────────────────────────────────────────
